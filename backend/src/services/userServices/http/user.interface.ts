@@ -4,7 +4,7 @@ export interface userBoutiqueI{
     // , prenoms: string
     , login: string
     , mot_de_passe: string
-    ,statutUser: number
+    ,statutUser: string
     , createdAt: string
     , modifyAt: string
     // ,userPhoto: string,
