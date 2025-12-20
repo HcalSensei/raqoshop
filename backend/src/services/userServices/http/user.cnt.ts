@@ -140,7 +140,7 @@ export class  utilisateurController {
     }
 }
 
-export class Role{
+export class RoleController{
     static async create(role: roleI): Promise<any>{
         return new Promise(async (resolve, reject)=>{
             try {
@@ -186,7 +186,22 @@ export class Role{
         return new Promise(async (resolve, reject)=>{
             try {
                 const connexion = await mysqlHelper.connect()
-                const sql = 'SELECT id_role,libelle,description,statutRole,createdAt,modifyAt FROM role OERDER BY createdAt DESC'
+                const sql = 'SELECT id_role,libelle,description,statutRole,createdAt,modifyAt FROM role ORDER BY createdAt DESC'
+                const result = await query(connexion, sql,[])
+                connexion.end()
+                resolve({status:200, error: false, message: "Liste des rôles", data: result.data})
+            } catch (error) {
+                console.warn(error);
+                return reject({error: true,status: 500,message: "une erreur interne s'est produite lors de la récupération des rôles",data: error})
+            }
+        })
+    }
+
+    static async getAllActive():Promise<any>{
+        return new Promise(async (resolve, reject)=>{
+            try {
+                const connexion = await mysqlHelper.connect()
+                const sql = 'SELECT id_role,libelle,description,statutRole,createdAt,modifyAt FROM role WHERE statutRole="actif" ORDER BY createdAt DESC'
                 const result = await query(connexion, sql,[])
                 connexion.end()
                 resolve({status:200, error: false, message: "Liste des rôles", data: result.data})
@@ -230,7 +245,7 @@ export class Role{
 
 }
 
-export class UtilisateurRole{
+export class UtilisateurRoleController{
     static async assignRole(id_utilisateur: string, id_role: string):Promise<any>{
         return new Promise(async (resolve, reject)=>{
             try {

@@ -23,6 +23,7 @@ import BaseTableStock from "./components/tables/BasicTables/BasicTableStock";
 import OrderTables from "./pages/Tables/OrderTables";
 import StockTables from "./pages/Tables/StockTables";
 import DriverTables from "./pages/Tables/DriverTables";
+import UserTable from "./pages/Tables/UserTable";
 
 export default function App() {
   return (
@@ -47,6 +48,7 @@ export default function App() {
             <Route path="/order-tables" element={<OrderTables />} />
             <Route path="/stock-tables" element={<StockTables />} />
             <Route path="/driver-tables" element={<DriverTables />} />
+            <Route path="/users-tables" element={<UserTable />} />
 
             {/* Ui Elements */}
             <Route path="/alerts" element={<Alerts />} />
