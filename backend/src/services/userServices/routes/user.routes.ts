@@ -1,16 +1,15 @@
 import { Router, Request, Response} from 'express'
 import { routeDecorator } from '../../../core/router'
 import { cdg,JwtMiddleware } from '../../../utils'
-import { RoleController } from '../http'
+import { utilisateurController } from '../http'
 import { ValidatorMiddleware } from '../../../utils'
 import { UserMiddleware } from '../http/user.middleware'
 
-class Role{
+class User{
     app:any;
     constructor(app: any){
         this.app = new app();
     }
-
     getRoutes(){
         this.app.use((req: Request, res: Response, next: Function) => {
             // Set Cross-Origin-Resource-Policy header
@@ -22,45 +21,56 @@ class Role{
         });
 
         this.app.get(
-            '/roles',
+            '/users',
             //JwtMiddleware.checkToken,
             async (req: Request, res: Response) => {
-                return cdg.api(res, RoleController.getAll());
+                return cdg.api(res, utilisateurController.getAll());
+            }
+        )
+
+        this.app.post(
+            '/register-user',
+            UserMiddleware.register(),
+            UserMiddleware.verifyUniqueLogin,
+            ValidatorMiddleware.validate,
+            async (req: Request, res: Response) => {
+                
+                return cdg.api(res, utilisateurController.create(req.body));
+            }
+        )
+
+        this.app.post(
+            '/login-user',
+            async (req: Request, res: Response) => {    
+                const login = req.body.login;
+                const mot_de_passe = req.body.mot_de_passe;
+                return cdg.api(res, utilisateurController.login(login, mot_de_passe));
+            }
+        )
+
+        this.app.post(
+            '/update-user',
+            //JwtMiddleware.checkToken,     
+            async (req: Request, res: Response) => {
+                return cdg.api(res, utilisateurController.update(req.body));
             }
         )
 
         this.app.get(
-            '/roles-active',
+            '/get-user-by-id/:id',
             //JwtMiddleware.checkToken,
             async (req: Request, res: Response) => {
-                return cdg.api(res, RoleController.getAllActive());
+                return cdg.api(res, utilisateurController.getOne(req.params.id));
             }
         )
 
-        this.app.post(
-            '/create-roles',
-            //JwtMiddleware.checkToken, 
-            UserMiddleware.velifyRoleExist,
-            async (req: Request, res: Response) => {
-                return cdg.api(res, RoleController.create(req.body));
-            }
-        )
-
-        this.app.post(
-            '/update-roles/:id_role',
-            //JwtMiddleware.checkToken,
-            UserMiddleware.velifyUpdateRoleExist,
-            async (req: Request, res: Response) => {
-                return cdg.api(res, RoleController.update(req.body));
-            }
-        )
         return this.app;
     }
 }
 
-const route = new Role(Router).getRoutes();
+const route = new User(Router).getRoutes();
 
-export class RoleRoute{
+export class UserRoute{
     @routeDecorator(route)
     static router: any;
     constructor(){
