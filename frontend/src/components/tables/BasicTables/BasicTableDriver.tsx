@@ -16,7 +16,7 @@ interface Driver {
   zone: string;
   delivered: number;
   inProgress: number;
-  status?: "Active" | "Pending" | "Cancel";
+  status?: "Active" | "Pending" | "Cancel | ended";
   orders?: { id: number; reference: string; status: string }[];
 }
 

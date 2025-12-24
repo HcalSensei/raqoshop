@@ -82,7 +82,15 @@ const othersItems: NavItem[] = [
   {
     icon: <UserIcon />,
     name: "Utilisateurs",
-    path: "/users-tables",
+    subItems: [
+      { name: "Liste", path: "/users-tables", pro: false },
+      { name: "Roles", path: "/roles-tables", pro: false },
+      { name: "Avatar", path: "/avatars", pro: false },
+      { name: "Badge", path: "/badge", pro: false },
+      { name: "Buttons", path: "/buttons", pro: false },
+      { name: "Images", path: "/images", pro: false },
+      { name: "Videos", path: "/videos", pro: false },
+    ],
   },
   /*{
     icon: <BoxCubeIcon />,

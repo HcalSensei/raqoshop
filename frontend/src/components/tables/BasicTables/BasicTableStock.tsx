@@ -11,7 +11,7 @@ import {
 import Badge from "../../ui/badge/Badge";
 
 interface StockItem {
-  id: number;
+  id: string | number;
   product: string;
   category: string;
   quantity: number;
@@ -66,8 +66,8 @@ export default function BaseTableStock() {
   const handleAddItem = () => {
     if (!newItem.product || !newItem.category || !newItem.supplier) return;
 
-    const id = stock.length ? Math.max(...stock.map((i) => i.id)) + 1 : 1;
-    setStock((prev) => [...prev, { ...newItem, id } as StockItem]);
+    //const id = stock.length ? Math.max(...stock.map((i) => i.id)) + 1 : 1;
+    // setStock((prev) => [...prev, { ...newItem, id } as StockItem]);
     setNewItem({ product: "", category: "", quantity: 0, supplier: "", status: "In Stock" });
     setModalOpen(false);
   };
@@ -142,12 +142,37 @@ export default function BaseTableStock() {
                   </Badge>
                 </TableCell>
                 <TableCell className="px-5 py-4">
-                  <button
+                  {/* <button
                     onClick={() => deleteItem(item.id)}
                     className="text-sm font-medium text-red-600 hover:underline"
                   >
                     Supprimer
-                  </button>
+                  </button> */}
+                  <select
+                      className="rounded-lg border px-3 py-2 text-sm"
+                      //value={filter}
+                      // onChange={(e) =>
+                      //   setFilter(e.target.value as "ALL" | StockItem["status"])
+                      // }
+                    >
+                      <option value="ALL">
+                        <button
+                          //onClick={() => deleteItem(item.id)}
+                          className="text-sm font-medium text-red-600 hover:underline"
+                        >
+                          Ajouter au stock
+                        </button>
+                      </option>
+                      <option value="In Stock">
+                        <button
+                          className="text-sm font-medium text-red-600 hover:underline"
+                        >
+                          Editer
+                        </button>
+                      </option>
+                      <option value="Low">Stock faible</option>
+                      <option value="Out">Rupture</option>
+                    </select>
                 </TableCell>
               </TableRow>
             ))}

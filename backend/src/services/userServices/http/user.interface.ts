@@ -1,13 +1,16 @@
 export interface userBoutiqueI{
     id_utilisateur : string
     ,nom: string
-    // , prenoms: string
+    , email: string
+    ,  telephone : string
+    , numero_CNI : string
+    ,numero_permis : string
     , login: string
     , mot_de_passe: string
     ,statutUser: string
     , createdAt: string
     , modifyAt: string
-    // ,userPhoto: string,
+    ,roleid: string,
     // viewAccess: number,
     // createAccess: number,
     // updateAccess: number,
