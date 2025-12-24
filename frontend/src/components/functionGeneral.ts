@@ -1,4 +1,4 @@
-export const baseUrl = 'http://127.0.0.1:5359/api/raqoshop/';
+export const baseUrl = 'http://192.168.1.18:5359/api/raqoshop/';
 
 export function formatDeDate(dateSended: Date | string): string {
     let dateObject = new Date(dateSended);
@@ -10,7 +10,6 @@ export function formatDeDate(dateSended: Date | string): string {
 
 export function getFilePathFromDBPath(dbPath: string): string {
     const pathWithoutSrc = dbPath.replace(/\\/g, "/");
-    const api_link = localStorage.getItem('api_Link');
     // return `https://apicommerce.ababi.ci/${pathWithoutSrc}`;
     
     return `${baseUrl}/${pathWithoutSrc}`;

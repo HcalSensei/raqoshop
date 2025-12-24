@@ -8,13 +8,13 @@ import { v4 as uuidv4 } from 'uuid';
 export class  utilisateurController {
     static async create(user: userBoutiqueI): Promise<any>{
         return new Promise(async (resolve, reject)=>{
-
+            
             try {
                 // console.log(uuid);
                 const userId = uuidv4();
                 const connexion =await mysqlHelper.connect()
-                
-                const sql = 'INSERT INTO utilisateur(id_utilisateur, nom, login, mot_de_passe, statutUser, createdAt, modifiyAt) VALUES (?,?,?,?,?,NOW(),NOW())';
+
+                const sql = 'INSERT INTO utilisateur(id_utilisateur, nom, email, telephone, numero_CNI, numero_permis, login, mot_de_passe, statutUser, createdAt, modifiyAt) VALUES (?,?,?,?,?,?,?,?,?,NOW(),NOW())';
                 let encpass: string | boolean  = await cdg.encryptPassword(user.mot_de_passe)
                 if(typeof encpass ==='boolean')
                     resolve({status:500, error: true, message: "Une erreur interne s'est produite au cryptage du mot de passe", data: null})
@@ -22,11 +22,20 @@ export class  utilisateurController {
                 let result = await query(connexion, sql, [
                     userId,
                     user.nom,
+                    user.email,
+                    user.telephone,
+                    user.numero_CNI,
+                    user.numero_permis,
                     user.login,
                     encpass,
                     user.statutUser
                 ])
                 result.data.id_utilisateur = userId
+                const sqlRole = 'INSERT INTO utilisateur_role(id_utilisateur, id_role, createdAt, modifyAt, statutUtilisateurRole) VALUES (?,?,NOW(),NOW(),"Actif")';
+                const resultRole = await query(connexion, sqlRole, [
+                    userId,
+                    user.roleid 
+                ])
                 connexion.end()
                 resolve({status:200, error: false, message: "Ajout d'un nouvel utilisateur", data: result.data})
             } catch (error) {
@@ -41,11 +50,14 @@ export class  utilisateurController {
         return new Promise(async (resolve, reject)=>{
             try {
                 const connexion= await mysqlHelper.connect()
-                let sql = 'UPDATE utilisateur SET nom=?,login=?,mot_de_passe=?,statutUser=?,modifiyAt=NOW() WHERE id_utilisateur=?';
+                let sql = 'UPDATE utilisateur SET nom=?, email=?, telephone=?, numero_CNI=?, numero_permis=?, login=?, statutUser=?, modifiyAt=NOW() WHERE id_utilisateur=?';
                 const oneUser = await query(connexion, sql, [
                     user.nom,
+                    user.email,
+                    user.telephone,
+                    user.numero_CNI,
+                    user.numero_permis,
                     user.login,
-                    user.mot_de_passe,
                     user.statutUser,
                     user.id_utilisateur
                 ])
@@ -63,7 +75,7 @@ export class  utilisateurController {
         return new Promise(async (resolve, reject)=>{
             try {
                 const connexion = await mysqlHelper.connect()
-                const sql = 'SELECT nom,login,statutUser,createdAt,modifiyAt FROM utilisateur'
+                const sql = 'SELECT nom,email,telephone,numero_CNI,numero_permis,login,statutUser,createdAt,modifiyAt FROM utilisateur'
                 const result = await query(connexion, sql,[])
                 connexion.end()
                 resolve({status:200, error: false, message: "Liste des utilisateurs", data: result.data})
@@ -93,7 +105,7 @@ export class  utilisateurController {
         return new Promise(async (resolve, reject)=>{
             try {
                 const connexion = await mysqlHelper.connect()
-                const sql = 'SELECT nom,login,statutUser,createdAt,modifiyAt,mot_de_passe FROM utilisateur WHERE login = ?';
+                const sql = 'SELECT nom,email,telephone,numero_CNI,numero_permis,login,statutUser,createdAt,modifiyAt,mot_de_passe FROM utilisateur WHERE login = ?';
                 const onUtilisateur = await query(connexion, sql, [login]);
                 if(onUtilisateur.data.length==0)
                     resolve({status:402, error: true, message: "Email ou mot de passe incorrect", data: null})
@@ -107,6 +119,10 @@ export class  utilisateurController {
                 const accesstoken = JwtMiddleware.generateToken({
                     login: onUtilisateur.data.login,
                     nom: onUtilisateur.data.nom,
+                    email: onUtilisateur.data.email,
+                    telephone: onUtilisateur.data.telephone,
+                    numero_CNI: onUtilisateur.data.numero_CNI,
+                    numero_permis: onUtilisateur.data.numero_permis,
                     statutUser: onUtilisateur.data.statutUser,
                     createdAt: onUtilisateur.data.createdAt,
                     modifiyAt: onUtilisateur.data.modifiyAt
@@ -260,6 +276,25 @@ export class UtilisateurRoleController{
             } catch (error) {
                 console.warn(error);
                 return reject({error: true,status: 500,message: "une erreur interne s'est produite lors de l'assignation du rôle à l'utilisateur",data: error})
+            }
+        })   
+    }
+
+    static async assignRoleBase(id_utilisateur: string, id_role: string):Promise<any>{
+        return new Promise(async (resolve, reject)=>{
+            try {
+            
+                const connexion = await mysqlHelper.connect()
+                const sql = 'INSERT INTO utilisateur_role(id_utilisateur, id_role, createdAt, modifyAt, statutUtilisateurRole) VALUES (?,?,NOW(),NOW(),"Actif")';
+                const result = await query(connexion, sql, [
+                    id_utilisateur,
+                    id_role
+                ])
+                connexion.end()
+                return true;
+            } catch (error) {
+                console.warn(error);
+                return false;
             }
         })   
     }
