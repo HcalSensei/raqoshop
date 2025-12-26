@@ -31,7 +31,7 @@ export class ArticleController {
         });
     }
 
-    static async update(article: ArticleI): Promise<any> {
+    static async update(article: ArticleI, id_article: string): Promise<any> {
         return new Promise(async (resolve, reject) => {
             try {
                 const connexion = await mysqlHelper.connect();
@@ -42,7 +42,6 @@ export class ArticleController {
                     article.nom,
                     article.prix,
                     article.statutArticle,
-                    article.id_article
                 ]);
 
                 connexion.end();

@@ -24,9 +24,9 @@ class Article {
         );
 
         this.app.post(
-            '/update-article',
+            '/update-article/:id_article',
             async (req: Request, res: Response) => {
-                return cdg.api(res, ArticleController.update(req.body));
+                return cdg.api(res, ArticleController.update(req.body, req.params.id_article));
             }
         );
 
@@ -38,9 +38,9 @@ class Article {
         );
 
         this.app.post(
-            '/activate-article',
+            '/activate-article/:id_article',
             async (req: Request, res: Response) => {
-                return cdg.api(res, ArticleController.activateDeactivate(req.body.id_article, req.body.statutArticle));
+                return cdg.api(res, ArticleController.activateDeactivate(req.params.id_article, req.body.statutArticle));
             }
         )
 
