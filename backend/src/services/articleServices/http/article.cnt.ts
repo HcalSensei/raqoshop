@@ -10,7 +10,7 @@ export class ArticleController {
                 const articleId = uuidv4();
                 const connexion = await mysqlHelper.connect();
                 // Assuming table 'article' exists with columns matching the interface
-                const sql = 'INSERT INTO article(id_article, reference, codeBar, nom, prix, statutArticle, createdAt, modifyAt) VALUES (?,?,?,?,?,?,NOW(),NOW())';
+                const sql = 'INSERT INTO article(id_article, reference, codeBar, nom, prix, statutArticle,id_fournisseurs, createdAt, modifyAt) VALUES (?,?,?,?,?,?,?,NOW(),NOW())';
 
                 let result = await query(connexion, sql, [
                     articleId,
@@ -18,12 +18,23 @@ export class ArticleController {
                     article.codeBar,
                     article.nom,
                     article.prix,
-                    article.statutArticle
+                    article.statutArticle,
+                    article.id_fournisseurs
                 ]);
 
                 result.data.id_article = articleId;
                 connexion.end();
-                resolve({ status: 200, error: false, message: "Ajout d'un nouvel article", data: result.data });
+                resolve({
+                    status: 200, error: false, message: "Ajout d'un nouvel article", data: {
+                        id_article: articleId,
+                        reference: article.reference,
+                        codeBar: article.codeBar,
+                        nom: article.nom,
+                        prix: article.prix,
+                        statutArticle: article.statutArticle,
+                        id_fournisseurs: article.id_fournisseurs
+                    }
+                });
             } catch (error) {
                 console.warn(error);
                 return reject({ error: true, status: 500, message: "Une erreur interne s'est produite lors de la création de l'article", data: error });
@@ -42,6 +53,7 @@ export class ArticleController {
                     article.nom,
                     article.prix,
                     article.statutArticle,
+                    id_article
                 ]);
 
                 connexion.end();
@@ -59,8 +71,44 @@ export class ArticleController {
                 const connexion = await mysqlHelper.connect();
                 const sql = 'SELECT * FROM article ORDER BY createdAt DESC';
                 const result = await query(connexion, sql, []);
+
+                for (let index = 0; index < result.data.length; index++) {
+                    const element = result.data[index];
+                    const sql2 = 'SELECT * FROM stock WHERE id_article=? ORDER BY createdAt DESC';
+                    const result2 = await query(connexion, sql2, [element.id_article]);
+
+                    const totalQty = result2.data.reduce((acc: any, item: any) => acc + item.quantite, 0);
+                    element.stock = result2.data;
+                    element.totalQty = totalQty;
+                }
                 connexion.end();
                 resolve({ status: 200, error: false, message: "Liste des articles", data: result.data });
+            } catch (error) {
+                console.warn(error);
+                return reject({ error: true, status: 500, message: "Une erreur interne s'est produite lors de la récupération des articles", data: error });
+            }
+        });
+    }
+
+    static async getCatalog(): Promise<any> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const connexion = await mysqlHelper.connect();
+                const sql = 'SELECT * FROM article ORDER BY createdAt DESC';
+                const result = await query(connexion, sql, []);
+
+                for (let index = 0; index < result.data.length; index++) {
+                    const element = result.data[index];
+                    const sql2 = 'SELECT * FROM stock WHERE id_article=? AND statutStock="Disponible" ORDER BY createdAt DESC';
+                    const result2 = await query(connexion, sql2, [element.id_article]);
+
+                    const totalQty = result2.data.reduce((acc: any, item: any) => acc + item.quantite, 0);
+                    element.stock = result2.data;
+                    element.totalQty = totalQty;
+                }
+                const filteredData = result.data.filter((item: any) => item.totalQty > 0);
+                connexion.end();
+                resolve({ status: 200, error: false, message: "Liste des articles", data: filteredData });
             } catch (error) {
                 console.warn(error);
                 return reject({ error: true, status: 500, message: "Une erreur interne s'est produite lors de la récupération des articles", data: error });

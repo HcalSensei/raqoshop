@@ -5,6 +5,7 @@ export interface ArticleI {
     nom: string;
     prix: number; // decimal in DB, number in TS
     statutArticle: string;
+    id_fournisseurs: string;
     createdAt: string;
     modifyAt: string;
 }

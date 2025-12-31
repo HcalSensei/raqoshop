@@ -1,17 +1,17 @@
-import { Router, Request, Response} from 'express'
+import { Router, Request, Response } from 'express'
 import { routeDecorator } from '../../../core/router'
-import { cdg,JwtMiddleware } from '../../../utils'
+import { cdg, JwtMiddleware } from '../../../utils'
 import { RoleController } from '../http'
 import { ValidatorMiddleware } from '../../../utils'
 import { UserMiddleware } from '../http/user.middleware'
 
-class Role{
-    app:any;
-    constructor(app: any){
+class Role {
+    app: any;
+    constructor(app: any) {
         this.app = new app();
     }
 
-    getRoutes(){
+    getRoutes() {
         this.app.use((req: Request, res: Response, next: Function) => {
             // Set Cross-Origin-Resource-Policy header
             res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
@@ -60,10 +60,10 @@ class Role{
 
 const route = new Role(Router).getRoutes();
 
-export class RoleRoute{
+export class RoleRoute {
     @routeDecorator(route)
     static router: any;
-    constructor(){
+    constructor() {
         //
     }
 }

@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { routeDecorator } from '../../../core/router';
-import { cdg } from '../../../utils';
-import { ArticleController } from '../http';
+import { cdg, ValidatorMiddleware } from '../../../utils';
+import { ArticleController, ArticleMiddleware } from '../http';
 
 class Article {
     app: any;
@@ -16,8 +16,18 @@ class Article {
             }
         );
 
+        this.app.get(
+            '/catalog',
+            async (req: Request, res: Response) => {
+                return cdg.api(res, ArticleController.getCatalog());
+            }
+        );
+
         this.app.post(
             '/add-article',
+            ArticleMiddleware.register(),
+            ArticleMiddleware.verifyUniqueArticle,
+            ValidatorMiddleware.validate,
             async (req: Request, res: Response) => {
                 return cdg.api(res, ArticleController.create(req.body));
             }
