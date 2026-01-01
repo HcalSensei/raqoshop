@@ -25,6 +25,7 @@ import StockTables from "./pages/Tables/StockTables";
 import DriverTables from "./pages/Tables/DriverTables";
 import UserTable from "./pages/Tables/UserTable";
 import RolesTables from "./pages/Tables/RolesTables";
+import SupplierTables from "./pages/Tables/SupplierTables";
 
 export default function App() {
   return (
@@ -51,6 +52,7 @@ export default function App() {
             <Route path="/driver-tables" element={<DriverTables />} />
             <Route path="/users-tables" element={<UserTable />} />
             <Route path="/roles-tables" element={<RolesTables />} />
+            <Route path="/supplier-tables" element={<SupplierTables />} />
 
             {/* Ui Elements */}
             <Route path="/alerts" element={<Alerts />} />

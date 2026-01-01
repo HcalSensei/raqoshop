@@ -1,17 +1,17 @@
 import { useMemo, useState, useEffect } from "react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHeader,
+    TableRow,
 } from "../../ui/table";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import Alert from "../../ui/alert/Alert";
-import {baseUrl} from '../../functionGeneral';
+import { baseUrl } from '../../functionGeneral';
 
-interface UsersItem{
-    id_utilisateur : string,
+interface UsersItem {
+    id_utilisateur: string,
     nom: string,
     email: string,
     telephone: string,
@@ -19,32 +19,21 @@ interface UsersItem{
     numero_permis: string
     , login: string
     , mot_de_passe: string
-    ,statutUser?: "Actif" | "En cours de validation" | "Annulée"
-    ,roleid: string 
+    , statutUser?: "Actif" | "En cours de validation" | "Annulée"
+    , roleid: string
     , createdAt: string
     , modifyAt: string
 }
 
-interface UsersEditItem{
-    nom: string,
-    email: string,
-    telephone: string,
-    numero_CNI: string,
-    numero_permis: string
-    , login: string
-    , mot_de_passe: string
-    ,statutUser?: "Actif" | "En cours de validation" | "Annulée"
-    ,roleid: string 
-    , createdAt: string
-    , modifyAt: string
-    , updating: boolean
+interface UsersEditItem extends UsersItem {
+    updating: boolean
 }
 
-export interface roleI{
-    id_role : string,
-    libelle : string,
-    description : string,
-    statutRole?:  "Actif" | "En cours de validation" | "Annulée"
+export interface roleI {
+    id_role: string,
+    libelle: string,
+    description: string,
+    statutRole?: "Actif" | "En cours de validation" | "Annulée"
 }
 
 export default function BasicTableUser() {
@@ -67,8 +56,8 @@ export default function BasicTableUser() {
         , numero_CNI: ""
         , numero_permis: ""
         , mot_de_passe: ""
-        ,roleid: ""
-        ,statutUser: "Actif"
+        , roleid: ""
+        , statutUser: "Actif"
         , createdAt: ""
         , modifyAt: ""
         , updating: false
@@ -78,16 +67,16 @@ export default function BasicTableUser() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [responseUsers, responseRoles]  =await Promise.all([
-                    fetch(`${baseUrl}users`), 
+                const [responseUsers, responseRoles] = await Promise.all([
+                    fetch(`${baseUrl}users`),
                     fetch(`${baseUrl}roles`)
                 ]);
                 let dataUsers = await responseUsers.json();
                 let dataRoles = await responseRoles.json();
                 setUsers(dataUsers.data)
                 setRoles(dataRoles.data)
-                console.log(dataUsers.data);    
-                
+                console.log(dataUsers.data);
+
             } catch (err: any) {
                 setError(err);
                 console.error(error);
@@ -103,9 +92,9 @@ export default function BasicTableUser() {
         let newUser: any
 
         try {
-            if(newUserItem.updating){
-                console.log( "updating...");
-                newUser =  {
+            if (newUserItem.updating) {
+                console.log("updating...");
+                newUser = {
                     nom: newUserItem.nom!,
                     login: newUserItem.login!,
                     roleid: newUserItem.roleid!,
@@ -119,9 +108,9 @@ export default function BasicTableUser() {
                     modifyAt: newUserItem.modifyAt!,
                 };
             }
-            else{
-                console.log( "registering...");
-                newUser =  {
+            else {
+                console.log("registering...");
+                newUser = {
                     nom: newUserItem.nom!,
                     login: newUserItem.login!,
                     roleid: newUserItem.roleid!,
@@ -139,15 +128,15 @@ export default function BasicTableUser() {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(newUser),  
+                    body: JSON.stringify(newUser),
                 });
                 setModalOpen(false);
                 let dataCreateUsers = await createUser.json()
-                if(dataCreateUsers.error){
+                if (dataCreateUsers.error) {
                     setError(dataCreateUsers.message);
                     console.log(dataCreateUsers);
                 }
-                
+
                 // window.location.reload()
             }
         } catch (error) {
@@ -157,7 +146,7 @@ export default function BasicTableUser() {
 
     }
 
-    const showEditUser= (id_utilisateur: string) => {
+    const showEditUser = (id_utilisateur: string) => {
         const userToEdit = users.find((user) => user.id_utilisateur === id_utilisateur);
         setNewUserItem({
             nom: userToEdit?.nom,
@@ -178,11 +167,11 @@ export default function BasicTableUser() {
     }
 
     const showLogin = (roleid: string | undefined) => {
-        let filteredrole = roles.filter((role) => role.id_role === roleid && (role.libelle==='Utilisateur-stock' || role.libelle==='Utilisateur-admin' || role.libelle==='Utilisateur-caisse'));
-        let filteredlivreur = roles.filter((role) => role.id_role === roleid && role.libelle==='Livreur');
-        let filteredautre = roles.filter((role) => role.id_role === roleid && (role.libelle!=='Livreur' && role.libelle!=='Utilisateur-stock' && role.libelle!=='Utilisateur-admin' && role.libelle!=='Utilisateur-caisse'));
+        let filteredrole = roles.filter((role) => role.id_role === roleid && (role.libelle === 'Utilisateur-stock' || role.libelle === 'Utilisateur-admin' || role.libelle === 'Utilisateur-caisse'));
+        let filteredlivreur = roles.filter((role) => role.id_role === roleid && role.libelle === 'Livreur');
+        let filteredautre = roles.filter((role) => role.id_role === roleid && (role.libelle !== 'Livreur' && role.libelle !== 'Utilisateur-stock' && role.libelle !== 'Utilisateur-admin' && role.libelle !== 'Utilisateur-caisse'));
 
-        if(filteredrole.length>0){
+        if (filteredrole.length > 0) {
             return (
                 <>
                     <input
@@ -192,7 +181,7 @@ export default function BasicTableUser() {
                         value={newUserItem.login}
                         onChange={(e) => setNewUserItem({ ...newUserItem, login: e.target.value })}
                     />
-                    <input 
+                    <input
                         type="password"
                         placeholder="Mot de passe"
                         className="w-full rounded-lg border px-3 py-2"
@@ -204,8 +193,8 @@ export default function BasicTableUser() {
 
         }
 
-        if(filteredlivreur.length>0){
-            return(
+        if (filteredlivreur.length > 0) {
+            return (
                 <>
                     <input
                         type="text"
@@ -239,8 +228,8 @@ export default function BasicTableUser() {
             );
         }
 
-        if(filteredautre.length>0){
-            return(
+        if (filteredautre.length > 0) {
+            return (
                 <>
                     <input
                         type="text"
@@ -260,28 +249,28 @@ export default function BasicTableUser() {
             {/* Bouton ajouter */}
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <input
-                type="text"
-                placeholder="Rechercher un utilisateur..."
-                className="w-64 rounded-lg border px-3 py-2 text-sm"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                    type="text"
+                    placeholder="Rechercher un utilisateur..."
+                    className="w-64 rounded-lg border px-3 py-2 text-sm"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
                 />
                 <button
-                onClick={() => setModalOpen(true)}
-                className="rounded-lg bg-brand-500 px-4 py-2 text-white text-sm hover:bg-brand-600"
+                    onClick={() => setModalOpen(true)}
+                    className="rounded-lg bg-brand-500 px-4 py-2 text-white text-sm hover:bg-brand-600"
                 >
-                Nouveau utilisateur
+                    Nouveau utilisateur
                 </button>
             </div>
 
-            {error ?(
+            {error ? (
                 <Alert
                     variant="error"
                     title="Error"
                     message={error as string}
                     showLink={false}
                 />
-                ): null
+            ) : null
             }
 
             {/* Tableau */}

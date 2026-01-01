@@ -1,30 +1,26 @@
 import { useMemo, useState, useEffect, use } from "react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHeader,
+    TableRow,
 } from "../../ui/table";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import {baseUrl} from '../../functionGeneral';
+import { baseUrl } from '../../functionGeneral';
 
-export interface roleI{
-    id_role : string | undefined,
-    libelle : string,
-    description : string,
-    statutRole?:  "Actif" | "En cours de validation" | "Annulée"
+export interface roleI {
+    id_role: string | undefined,
+    libelle: string,
+    description: string,
+    statutRole?: "Actif" | "En cours de validation" | "Annulée"
 }
 
-export interface roleEditI{
-    id_role : string,
-    libelle : string,
-    description : string,
-    statutRole?:  "Actif" | "En cours de validation" | "Annulée",
+export interface roleEditI extends roleI {
     updating: boolean
 }
 
-export default function BasicTableRole(){
+export default function BasicTableRole() {
     const [roles, setRoles] = useState<roleI[]>([])
     const [error, setError] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
@@ -38,11 +34,11 @@ export default function BasicTableRole(){
     const handleAddRoleItem = async (e: any) => {
         e.preventDefault();
         if (!newRoleItem.libelle || !newRoleItem.description) return;
-        let newRole 
+        let newRole
 
         try {
-             if(newRoleItem.updating){
-                console.log( "updating...");
+            if (newRoleItem.updating) {
+                console.log("updating...");
                 newRole = {
                     id_role: newRoleItem.id_role,
                     libelle: newRoleItem.libelle,
@@ -59,7 +55,7 @@ export default function BasicTableRole(){
                 setModalOpen(false);
                 window.location.reload()
             }
-            else{
+            else {
                 console.log("creating...");
                 newRole = {
                     id_role: newRoleItem.id_role,
@@ -91,7 +87,7 @@ export default function BasicTableRole(){
         });
     };
 
-    const showEditRoleItem =(id_role: string | undefined)=> {
+    const showEditRoleItem = (id_role: string | undefined) => {
         const roleToEdit = roles.find((role) => role.id_role === id_role);
         setNewRoleItem({
             id_role: roleToEdit?.id_role,
@@ -100,18 +96,28 @@ export default function BasicTableRole(){
             statutRole: roleToEdit?.statutRole,
             updating: true
         });
-            setModalOpen(true);
-        
+        setModalOpen(true);
+
+    }
+
+    const showCancelRoleItem = () => {
+        setNewRoleItem({
+            id_role: "",
+            libelle: "",
+            description: "",
+            statutRole: "Actif",
+        });
+        setModalOpen(false);
     }
 
     useEffect(() => {
         const fetchRoles = async () => {
             try {
-                const response  =await fetch(`${baseUrl}roles`);
+                const response = await fetch(`${baseUrl}roles`);
                 let data = await response.json();
                 // console.log(data);
                 setRoles(data.data)
-                
+
             } catch (err: any) {
                 setError(err);
                 console.error(error);
@@ -151,18 +157,18 @@ export default function BasicTableRole(){
                                 <TableCell>{item.libelle}</TableCell>
                                 <TableCell>{item.description}</TableCell>
                                 <TableCell>{item.statutRole}</TableCell>
-                                <TableCell><button 
-                                                className="rounded-sm bg-yellow-600 px-4 py-2 text-white hover:bg-yellow-700"
-                                                onClick={() => showEditRoleItem(item.id_role)}
-                                            >
-                                                Editer
-                                            </button>
+                                <TableCell><button
+                                    className="rounded-sm bg-yellow-600 px-4 py-2 text-white hover:bg-yellow-700"
+                                    onClick={() => showEditRoleItem(item.id_role)}
+                                >
+                                    Editer
+                                </button>
                                 </TableCell>
-                                <TableCell><button 
-                                                className="rounded-sm bg-red-600 px-4 py-2 text-white hover:bg-red-700"
-                                            >
-                                                Désactiver
-                                            </button>
+                                <TableCell><button
+                                    className="rounded-sm bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                                >
+                                    Désactiver
+                                </button>
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -209,7 +215,7 @@ export default function BasicTableRole(){
                             </button>
                             <button
                                 className="rounded-lg bg-gray-800 px-4 py-2 text-white"
-                                onClick={() => setModalOpen(false)}
+                                onClick={showCancelRoleItem}
                             >
                                 Annuler
                             </button>
