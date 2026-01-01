@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { routeDecorator } from '../../../core/router';
-import { cdg } from '../../../utils';
-import { ArticleController } from '../http';
+import { cdg, ValidatorMiddleware } from '../../../utils';
+import { ArticleController, ArticleMiddleware } from '../http';
 
 class Article {
     app: any;
@@ -16,17 +16,27 @@ class Article {
             }
         );
 
+        this.app.get(
+            '/catalog',
+            async (req: Request, res: Response) => {
+                return cdg.api(res, ArticleController.getCatalog());
+            }
+        );
+
         this.app.post(
             '/add-article',
+            ArticleMiddleware.register(),
+            ArticleMiddleware.verifyUniqueArticle,
+            ValidatorMiddleware.validate,
             async (req: Request, res: Response) => {
                 return cdg.api(res, ArticleController.create(req.body));
             }
         );
 
         this.app.post(
-            '/update-article',
+            '/update-article/:id_article',
             async (req: Request, res: Response) => {
-                return cdg.api(res, ArticleController.update(req.body));
+                return cdg.api(res, ArticleController.update(req.body, req.params.id_article));
             }
         );
 
@@ -38,9 +48,9 @@ class Article {
         );
 
         this.app.post(
-            '/activate-article',
+            '/activate-article/:id_article',
             async (req: Request, res: Response) => {
-                return cdg.api(res, ArticleController.activateDeactivate(req.body.id_article, req.body.statutArticle));
+                return cdg.api(res, ArticleController.activateDeactivate(req.params.id_article, req.body.statutArticle));
             }
         )
 
