@@ -31,17 +31,27 @@ export class OrderController {
 
                 const newReference = `${prefix}${sequence}`;
 
-                const sql = 'INSERT INTO commande(id_commande, reference, date_commande, statut, montant_total, type_commande, createdAt, modifyAt) VALUES (?,?,?,?,?,?,NOW(),NOW())';
+                const sql = 'INSERT INTO commande(id_commande, reference, statut, montant_total, type_commande, id_client, date_commande,createdAt, modifiyAt) VALUES (?,?,?,?,?,?,NOW(),NOW(),NOW())';
 
                 let result = await query(connexion, sql, [
                     orderId,
                     newReference,
-                    order.date_commande,
-                    order.statut,
+                    order.status,
                     order.montant_total,
-                    order.type_commande
+                    order.type_commande,
+                    order.client
                 ]);
+                const sqlLigneCommande = 'INSERT INTO ligne_commande(id_ligne, id_commande, id_article, quantite, prix_unitaire, createdAt, modifiyAt) VALUES (?,?,?,?,?,NOW(),NOW())';
 
+                for (let i = 0; i < order.items.length; i++) {
+                    const ligneCommande = await query(connexion, sqlLigneCommande, [
+                        uuidv4(),
+                        orderId,
+                        order.items[i].id_article,
+                        order.items[i].quantity,
+                        order.items[i].prix
+                    ]);
+                }
                 result.data.id_commande = orderId;
                 connexion.end();
                 resolve({
@@ -49,9 +59,10 @@ export class OrderController {
                         id_commande: orderId,
                         reference: newReference,
                         date_commande: order.date_commande,
-                        statut: order.statut,
+                        status: order.status,
                         montant_total: order.montant_total,
-                        type_commande: order.type_commande
+                        type_commande: order.type_commande,
+                        items: order.items
                     }
                 });
             } catch (error) {
@@ -69,7 +80,7 @@ export class OrderController {
                 const result = await query(connexion, sql, [
                     order.reference,
                     order.date_commande,
-                    order.statut,
+                    order.status,
                     order.montant_total,
                     order.type_commande,
                     id_commande
@@ -88,8 +99,14 @@ export class OrderController {
         return new Promise(async (resolve, reject) => {
             try {
                 const connexion = await mysqlHelper.connect();
-                const sql = 'SELECT * FROM commande ORDER BY createdAt DESC';
+                const sql = 'SELECT c.id_commande, c.reference,c.date_commande, c.statut,c.montant_total,c.id_client, c.type_commande, u.nom as client FROM commande c INNER JOIN utilisateur u ON u.id_utilisateur = c.id_client ORDER BY c.createdAt DESC';
                 const result = await query(connexion, sql, []);
+
+                const sqlLigneCommande = 'SELECT l.id_ligne, l.id_commande, l.id_article, l.quantite as quantity, l.prix_unitaire as prix,a.nom FROM ligne_commande l INNER JOIN article a ON a.id_article = l.id_article WHERE l.id_commande=?';
+                for (let i = 0; i < result.data.length; i++) {
+                    const ligneCommande = await query(connexion, sqlLigneCommande, [result.data[i].id_commande]);
+                    result.data[i].items = ligneCommande.data;
+                }
                 connexion.end();
                 resolve({ status: 200, error: false, message: "Liste des commandes", data: result.data });
             } catch (error) {

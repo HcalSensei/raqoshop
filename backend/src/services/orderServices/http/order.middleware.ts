@@ -9,7 +9,7 @@ export class OrderMiddleware {
         return [
             body('montant_total').notEmpty().withMessage('Le montant total est obligatoire'),
             body('date_commande').notEmpty().withMessage('La date de commande est obligatoire'),
-            body('statut').notEmpty().withMessage('Le statut est obligatoire')
+            body('status').notEmpty().withMessage('Le statut est obligatoire')
         ]
     }
 
