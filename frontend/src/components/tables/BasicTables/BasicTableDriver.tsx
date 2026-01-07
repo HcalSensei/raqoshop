@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { baseUrl, getApiMessage, getFilePathFromDBPath } from '../../functionGeneral';
 import {
   Table,
   TableBody,
@@ -10,86 +11,210 @@ import Badge from "../../ui/badge/Badge";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 interface Driver {
-  id: number;
-  image: string;
-  name: string;
-  zone: string;
+  id_utilisateur: string;
+  imageCniRecto: any;
+  imageCniVerso: any;
+  imagePermisRecto: any;
+  imagePermisVerso: any;
+  nom: string;
+  email: string;
+  telephone: string;
+  numero_CNI: string;
+  numero_permis: string;
+  roleid: string;
   delivered: number;
   inProgress: number;
-  status?: "Active" | "Pending" | "Cancel | ended";
+  statutUser?: "Active" | "Pending" | "Cancel | ended";
   orders?: { id: number; reference: string; status: string }[];
 }
 
-const initialDrivers: Driver[] = [
-  {
-    id: 1,
-    image: "/images/user/user-17.jpg",
-    name: "Moussa Traoré",
-    zone: "Centre-ville",
-    delivered: 120,
-    inProgress: 3,
-    teamImages: ["/images/user/user-22.jpg", "/images/user/user-23.jpg"],
-    status: "Active",
-    orders: [
-      { id: 1, reference: "CMD-101", status: "En cours" },
-      { id: 2, reference: "CMD-102", status: "En cours" },
-      { id: 3, reference: "CMD-103", status: "Livrée" },
-    ],
-  },
-  {
-    id: 2,
-    image: "/images/user/user-18.jpg",
-    name: "Awa Diallo",
-    zone: "Nord",
-    delivered: 86,
-    inProgress: 0,
-    teamImages: ["/images/user/user-25.jpg"],
-    status: "Pending",
-    orders: [{ id: 4, reference: "CMD-104", status: "Livrée" }],
-  },
-];
+interface driverUpdate extends Driver {
+  updating: boolean;
+}
+
+interface roleI {
+  id_role: string,
+  libelle: string,
+  description: string,
+  statutRole?: "Actif" | "En cours de validation" | "Annulée"
+}
 
 export default function DriverCrud() {
-  const [drivers, setDrivers] = useState<Driver[]>(initialDrivers);
+  const [drivers, setDrivers] = useState<Driver[]>([]);
   const [search, setSearch] = useState("");
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [newDriverModal, setNewDriverModal] = useState(false);
-  const [newDriver, setNewDriver] = useState<Partial<Driver>>({});
+  const [newDriver, setNewDriver] = useState<Partial<driverUpdate>>({});
+  const [roles, setRoles] = useState<roleI[]>([]);
+  const [error, setError] = useState({ isError: false, message: "" });
+  const [showPictureModal, setShowPictureModal] = useState(false)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [responseRoles, responseDrivers] = await Promise.all([
+          fetch(`${baseUrl}roles`),
+          fetch(`${baseUrl}drivers`)
+        ])
+
+        const dataRoles = await responseRoles.json()
+        const dataDrivers = await responseDrivers.json()
+        setRoles(dataRoles.data)
+        setDrivers(dataDrivers.data)
+        for (let i of dataDrivers.data) {
+          for (let j of i.images) {
+            console.log(j);
+            if (j.objet_photo === "permis_recto") {
+              i.imagePermisRecto = j.file_path
+            }
+            if (j.objet_photo === "permis_verso") {
+              i.imagePermisVerso = j.file_path
+            }
+            if (j.objet_photo === "cni_recto") {
+              i.imageCniRecto = j.file_path
+            }
+            if (j.objet_photo === "cni_verso") {
+              i.imageCniVerso = j.file_path
+            }
+          }
+
+        }
+
+
+
+      } catch (error) {
+        console.error("Error fetching suppliers:", error);
+      }
+    }
+
+    fetchData()
+  }, [])
 
   /* Filtrage */
   const filteredDrivers = useMemo(
     () =>
       drivers.filter(
         (d) =>
-          d.name.toLowerCase().includes(search.toLowerCase()) ||
-          d.zone.toLowerCase().includes(search.toLowerCase())
+          d.nom.toLowerCase().includes(search.toLowerCase()) ||
+          d.email.toLowerCase().includes(search.toLowerCase())
       ),
     [drivers, search]
   );
 
+  const filteredRoles: any[] = roles.filter((item) => {
+    const matchSearch = item.libelle.toLowerCase().includes('livreur');
+    return matchSearch;
+  });
+
   /* Ajouter un nouveau livreur */
-  const addDriver = () => {
-    if (!newDriver.name || !newDriver.zone) return;
-    setDrivers((prev) => [
-      ...prev,
-      {
-        id: prev.length + 1,
-        image: newDriver.image || "/images/user/user-default.jpg",
-        name: newDriver.name,
-        zone: newDriver.zone,
-        delivered: 0,
-        inProgress: 0,
-        status: "Active",
-        orders: [],
+  const addDriver = async () => {
+    if (!newDriver.nom || !newDriver.email) return;
+    const driver = {
+      ...newDriver,
+      statutUser: "Active",
+    }
+
+    const response = await fetch(`${baseUrl}register-driver`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    ]);
+      body: JSON.stringify(driver),
+    });
+
+    const data = await response.json();
+    if (data.error) {
+      setError({ isError: true, message: data.message });
+    } else {
+      setError({ isError: false, message: data.message });
+    }
+
     setNewDriverModal(false);
     setNewDriver({});
   };
 
-  /* Supprimer un livreur */
-  const deleteDriver = (id: number) =>
-    setDrivers((prev) => prev.filter((d) => d.id !== id));
+  const showEditNewDriverModal = (idDriver: string) => {
+    const driver = drivers.find((d) => d.id_utilisateur === idDriver);
+    if (!driver) return;
+    console.log(driver);
+    setNewDriverModal(true);
+    setNewDriver(driver);
+  }
+
+  const CancelEditDrivelModal = () => {
+    setNewDriverModal(false);
+    setNewDriver({});
+  }
+
+  const HandleAddPicture = async () => {
+    if (!newDriver.id_utilisateur) return;
+    const formData = new FormData();
+
+    formData.append("utilisateurId", newDriver.id_utilisateur);
+    if (newDriver.imagePermisRecto) {
+      newDriver.imagePermisRecto.forEach((file: any) => {
+        formData.append("files", file);
+      })
+      formData.append("objet_photo", "permis_recto")
+    }
+    if (newDriver.imagePermisVerso) {
+      newDriver.imagePermisVerso.forEach((file: any) => {
+        formData.append("files", file);
+      })
+      formData.append("objet_photo", "permis_verso")
+    }
+    if (newDriver.imageCniRecto) {
+      newDriver.imageCniRecto.forEach((file: any) => {
+        formData.append("files", file);
+      })
+      formData.append("objet_photo", "cni_recto")
+    }
+    if (newDriver.imageCniVerso) {
+      newDriver.imageCniVerso.forEach((file: any) => {
+        formData.append("files", file);
+      })
+      formData.append("objet_photo", "cni_verso")
+    }
+    console.log(formData);
+
+    try {
+      console.log(`${baseUrl}image-user/add`);
+
+      const response = await fetch(`${baseUrl}image-user/add`, {
+        method: "PUT",
+        headers: {
+          // "Content-Type": "application/json",
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (data.error) {
+        setError({ isError: true, message: data.message });
+      } else {
+        setError({ isError: false, message: data.message });
+      }
+
+      setShowPictureModal(false);
+      setNewDriver({});
+    } catch (error) {
+      console.error("Error adding picture:", error);
+    }
+  }
+
+  const handelShowPictureModal = (idDriver: string) => {
+    const driver = drivers.find((d) => d.id_utilisateur === idDriver);
+    if (!driver) return;
+    console.log(driver);
+    setShowPictureModal(true);
+    setNewDriver(driver);
+  }
+
+  const CancelShowPictureModal = () => {
+    setShowPictureModal(false);
+    setNewDriver({});
+  }
+
 
   return (
     <>
@@ -109,6 +234,8 @@ export default function DriverCrud() {
           Nouveau livreur
         </button>
       </div>
+
+      {getApiMessage(error.isError, error.message)}
 
       {/* Tableau TailAdmin */}
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
@@ -151,26 +278,31 @@ export default function DriverCrud() {
 
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
               {filteredDrivers.map((driver) => (
-                <TableRow key={driver.id}>
+                <TableRow key={driver.id_utilisateur}>
                   <TableCell className="px-5 py-4 text-start">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 overflow-hidden rounded-full">
                         <img
                           width={40}
                           height={40}
-                          src={driver.image}
-                          alt={driver.name}
+                          // src={driver.imageCniRecto[0]}
+                          alt={driver.nom}
                         />
                       </div>
                       <div>
                         <span className="block font-medium text-gray-800 dark:text-white/90">
-                          {driver.name}
+                          <button
+                            className="text-sm text-brand-500 hover:underline"
+                            onClick={() => handelShowPictureModal(driver.id_utilisateur)}
+                          >
+                            {driver.nom}
+                          </button>
                         </span>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell className="px-5 py-4 text-gray-500 text-start">
-                    {driver.zone}
+                    {driver.email}
                   </TableCell>
                   <TableCell className="px-5 py-4 text-gray-500 text-start">
                     {driver.delivered}
@@ -187,8 +319,14 @@ export default function DriverCrud() {
                         Détails
                       </button>
                       <button
+                        className="text-sm text-yellow-600 hover:underline"
+                        onClick={() => showEditNewDriverModal(driver.id_utilisateur)}
+                      >
+                        Modifier
+                      </button>
+                      <button
                         className="text-sm text-red-600 hover:underline"
-                        onClick={() => deleteDriver(driver.id)}
+                      //onClick={() => deleteDriver(driver.id)}
                       >
                         Supprimer
                       </button>
@@ -216,11 +354,11 @@ export default function DriverCrud() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-lg dark:bg-gray-900">
             <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white">
-              {selectedDriver.name}
+              {selectedDriver.nom}
             </h3>
 
             <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-              <p><strong>Zone :</strong> {selectedDriver.zone}</p>
+              <p><strong>Zone :</strong> {selectedDriver.email}</p>
               <p><strong>Commandes livrées :</strong> {selectedDriver.delivered}</p>
               <p><strong>En cours :</strong> {selectedDriver.inProgress}</p>
             </div>
@@ -279,40 +417,173 @@ export default function DriverCrud() {
                 type="text"
                 placeholder="Nom du livreur"
                 className="w-full rounded-lg border px-3 py-2 text-sm"
-                value={newDriver.name || ""}
+                value={newDriver.nom || ""}
                 onChange={(e) =>
-                  setNewDriver({ ...newDriver, name: e.target.value })
+                  setNewDriver({ ...newDriver, nom: e.target.value })
                 }
+              />
+
+              <input
+                type="text"
+                placeholder="Mail"
+                className="w-full rounded-lg border px-3 py-2"
+                value={newDriver.email}
+                onChange={(e) => setNewDriver({ ...newDriver, email: e.target.value })}
               />
               <input
                 type="text"
-                placeholder="Zone"
-                className="w-full rounded-lg border px-3 py-2 text-sm"
-                value={newDriver.zone || ""}
-                onChange={(e) =>
-                  setNewDriver({ ...newDriver, zone: e.target.value })
-                }
+                placeholder="Telephone"
+                className="w-full rounded-lg border px-3 py-2"
+                value={newDriver.telephone}
+                onChange={(e) => setNewDriver({ ...newDriver, telephone: e.target.value })}
               />
               <input
                 type="text"
-                placeholder="Image URL"
-                className="w-full rounded-lg border px-3 py-2 text-sm"
-                value={newDriver.image || ""}
-                onChange={(e) =>
-                  setNewDriver({ ...newDriver, image: e.target.value })
-                }
+                placeholder="Numero de CNI"
+                className="w-full rounded-lg border px-3 py-2"
+                value={newDriver.numero_CNI}
+                onChange={(e) => setNewDriver({ ...newDriver, numero_CNI: e.target.value })}
               />
+              <input
+                type="text"
+                placeholder="Numero de permis de conduire"
+                className="w-full rounded-lg border px-3 py-2"
+                value={newDriver.numero_permis}
+                onChange={(e) => setNewDriver({ ...newDriver, numero_permis: e.target.value })}
+              />
+              <select
+                className="w-full rounded-lg border px-3 py-2"
+                value={newDriver.roleid}
+                onChange={(e) => setNewDriver({ ...newDriver, roleid: e.target.value })}
+              >
+                <option value="">Selectionner un rôle</option>
+                {filteredRoles.map((role) => (
+                  <option key={role.libelle} value={role.id_role}>{role.libelle}</option>
+                ))}
+              </select>
+
+              {/* {newDriver.updating && (
+                <input
+                  type="file"
+                  className="w-full rounded-lg border px-3 py-2"
+                  onChange={(e) => setNewDriver({ ...newDriver, imageCni: e.target.files?.[0] })}
+                />
+              )} */}
             </div>
             <div className="mt-6 flex justify-end gap-2">
               <button
                 className="rounded-lg bg-gray-800 px-4 py-2 text-sm text-white hover:bg-gray-700"
-                onClick={() => setNewDriverModal(false)}
+                onClick={() => CancelEditDrivelModal()}
               >
                 Annuler
               </button>
               <button
                 className="rounded-lg bg-brand-500 px-4 py-2 text-sm text-white hover:bg-brand-600"
                 onClick={addDriver}
+              >
+                Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/*Modal d'affichage et d'ajout d'images*/}
+      {showPictureModal && (
+        <div className="fixed inset-0 z-[999] bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-boxdark w-full max-w-4xl rounded-2xl p-6 shadow-2xl max-h-[73vh] overflow-y-auto">
+            <h3 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white">
+              Permis et CNI
+            </h3>
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <div>
+                  <img
+                    src={newDriver.imagePermisRecto ? getFilePathFromDBPath(newDriver.imagePermisRecto) : "/images/grid-image/image-02.png"}
+                    alt=" grid"
+                    className="border border-gray-200 rounded-xl dark:border-gray-800"
+                  />
+                  <label htmlFor="PERM-RECTO" className="mt-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Permis de conduire recto</label>
+                  <input
+                    type="file"
+                    placeholder="Nom du livreur"
+                    className="w-full rounded-lg border px-3 py-2 text-sm"
+                    // value={newDriver.imagePermisRecto}
+                    onChange={(e) =>
+                      setNewDriver({ ...newDriver, imagePermisRecto: e.target.files ? Array.from(e.target.files) : [] })
+                    }
+                  />
+                </div>
+
+                <div>
+                  <img
+                    src={newDriver.imagePermisVerso ? getFilePathFromDBPath(newDriver.imagePermisVerso) : "/images/grid-image/image-03.png"}
+                    alt=" grid"
+                    className="border border-gray-200 rounded-xl dark:border-gray-800"
+                  />
+                  <label htmlFor="PERM-VERSO" className="mt-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Permis de conduire verso</label>
+                  <input
+                    type="file"
+                    placeholder="Nom du livreur"
+                    className="w-full rounded-lg border px-3 py-2 text-sm"
+                    // value={newDriver.imagePermisVerso}
+                    onChange={(e) =>
+                      setNewDriver({ ...newDriver, imagePermisVerso: e.target.files ? Array.from(e.target.files) : [] })
+                    }
+                  />
+                </div>
+
+              </div>
+
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <div>
+                  <img
+                    src={newDriver.imageCniRecto ? getFilePathFromDBPath(newDriver.imageCniRecto) : "/images/grid-image/image-02.png"}
+                    alt=" grid"
+                    className="border border-gray-200 rounded-xl dark:border-gray-800"
+                  />
+                  <label htmlFor="CNI-RECTO" className="mt-2 block text-sm font-medium text-gray-700 dark:text-gray-400">CNI recto</label>
+                  <input
+                    type="file"
+                    placeholder="Nom du livreur"
+                    className="w-full rounded-lg border px-3 py-2 text-sm"
+                    // value={newDriver.imageCniRecto}
+                    onChange={(e) =>
+                      setNewDriver({ ...newDriver, imageCniRecto: e.target.files ? Array.from(e.target.files) : [] })
+                    }
+                  />
+                </div>
+
+                <div>
+                  <img
+                    src={newDriver.imageCniVerso ? getFilePathFromDBPath(newDriver.imageCniVerso) : "/images/grid-image/image-03.png"}
+                    alt=" grid"
+                    className="border border-gray-200 rounded-xl dark:border-gray-800"
+                  />
+                  <label htmlFor="CNI-VERSO" className="mt-2 block text-sm font-medium text-gray-700 dark:text-gray-400">CNI verso</label>
+                  <input
+                    type="file"
+                    placeholder="Nom du livreur"
+                    className="w-full rounded-lg border px-3 py-2 text-sm"
+                    // value={newDriver.imageCniVerso}
+                    onChange={(e) =>
+                      setNewDriver({ ...newDriver, imageCniVerso: e.target.files ? Array.from(e.target.files) : [] })
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                className="rounded-lg bg-gray-800 px-4 py-2 text-sm text-white hover:bg-gray-700"
+                onClick={() => CancelShowPictureModal()}
+              >
+                Annuler
+              </button>
+              <button
+                className="rounded-lg bg-brand-500 px-4 py-2 text-sm text-white hover:bg-brand-600"
+                onClick={HandleAddPicture}
               >
                 Enregistrer
               </button>

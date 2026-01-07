@@ -3,10 +3,11 @@ import path, { resolve } from "path"
 import fs from "fs";
 import { readFileSync, writeFileSync } from 'fs';
 import mime from "mime-types"
-import { cdg } from "./coddyger"; 
+import { cdg } from "./coddyger";
 import { config } from "./config";
+import { error } from "console";
 
-interface File{
+interface File {
     path: string,
     mimetype: string,
     filename: string,
@@ -16,64 +17,64 @@ interface File{
     size: number,
 }
 
-export class MulterMiddleware{
-    static uploadPathTmp: any = path.join(/*cdg.root() +*/""+process.env.UPLOAD_TMP_PATH)
-    static uploadPath: any = path.join(/*cdg.root() +*/""+process.env.UPLOAD_PATH);
-    static uploadGalleryImagePath: any = path.join(/*cdg.root() +*/""+process.env.UPLOAD_GALLERY_IMAGE);
-    static uploadVideoPath: any = path.join(""+process.env.UPLOAD_GALLERY_VIDEO)
-    static host: any = config.serverhost +":"+config.serverport;
+export class MulterMiddleware {
+    static uploadPathTmp: any = path.join(/*cdg.root() +*/"" + process.env.UPLOAD_TMP_PATH)
+    static uploadPath: any = path.join(/*cdg.root() +*/"" + process.env.UPLOAD_PATH);
+    static uploadGalleryImagePath: any = path.join(/*cdg.root() +*/"" + process.env.UPLOAD_GALLERY_IMAGE);
+    static uploadVideoPath: any = path.join("" + process.env.UPLOAD_GALLERY_VIDEO)
+    static host: any = config.serverhost + ":" + config.serverport;
 
 
-    static async single(req: any, res: any, next:any){
-        
-        await MulterMiddleware.buildUploadPath(); 
-        let allowedExtension = ['png', 'jpeg', 'jpg', 'gif', 'PNG','JPEG', 'JPG', 'GIF'];
+    static async single(req: any, res: any, next: any) {
+
+        await MulterMiddleware.buildUploadPath();
+        let allowedExtension = ['png', 'jpeg', 'jpg', 'gif', 'PNG', 'JPEG', 'JPG', 'GIF'];
         const upload = multer({
             dest: MulterMiddleware.uploadPathTmp,
-            fileFilter: (req:any, file:any, cb:any)=>{
-                if(!cdg.inArray(MulterMiddleware.buildExt(file.mimetype), allowedExtension)){
+            fileFilter: (req: any, file: any, cb: any) => {
+                if (!cdg.inArray(MulterMiddleware.buildExt(file.mimetype), allowedExtension)) {
                     req.fileValidationError = 'Type de fichier non autorisé';
-                    return cdg.api(res, new Promise((resolve)=>{
+                    return cdg.api(res, new Promise((resolve) => {
                         resolve({
-                            status:422,
+                            status: 422,
                             message: 'error',
-                            data: cdg.buildApiError({msg: 'Type de fichier non autorisé'})
+                            data: cdg.buildApiError({ msg: 'Type de fichier non autorisé' })
                         });
                     }));
                 }
                 cb(null, true);
             }
         }).single("file");
-        
+
         upload(req, res, function (err: any) {
-            if(req.file) {
+            if (req.file) {
                 if (err instanceof multer.MulterError) {
-                    if(err.code === 'LIMIT_FILE_SIZE') {
+                    if (err.code === 'LIMIT_FILE_SIZE') {
                         err.message = "Fichier trop volumineux"
                     } else if (err.code === 'LIMIT_FILE_COUNT') {
                         err.message = "Nombre maximum de fichier atteint"
                     }
-                    return cdg.api(res, new Promise((resolve)=>{
+                    return cdg.api(res, new Promise((resolve) => {
                         resolve({
                             status: 401,
                             message: 'error',
-                            data: cdg.buildApiError({msg: [err]})
+                            data: cdg.buildApiError({ msg: [err] })
                         });
                     }));
-                } else if(req.fileValidationError) {
-                    return cdg.api(res, new Promise((resolve)=>{
+                } else if (req.fileValidationError) {
+                    return cdg.api(res, new Promise((resolve) => {
                         resolve({
                             status: 401,
                             message: 'error',
-                            data: cdg.buildApiError({msg: req.fileValidationError})
+                            data: cdg.buildApiError({ msg: req.fileValidationError })
                         });
                     }));
                 } else if (err) {
-                    return cdg.api(res, new Promise((resolve)=>{
+                    return cdg.api(res, new Promise((resolve) => {
                         resolve({
                             status: 401,
                             message: 'error',
-                            data: cdg.buildApiError({msg: err.message})
+                            data: cdg.buildApiError({ msg: err.message })
                         });
                     }));
                 }
@@ -85,56 +86,56 @@ export class MulterMiddleware{
         })
     }
 
-    static async singleVideo(req: any, res: any, next:any){
-        
-        await MulterMiddleware.buildUploadPath(); 
-        let allowedExtension = ['mp4', 'avi', 'mov', 'wmv','mkv', 'MP4','AVI', 'MOV', 'WMV','MKV'];
+    static async singleVideo(req: any, res: any, next: any) {
+
+        await MulterMiddleware.buildUploadPath();
+        let allowedExtension = ['mp4', 'avi', 'mov', 'wmv', 'mkv', 'MP4', 'AVI', 'MOV', 'WMV', 'MKV'];
         const upload = multer({
             dest: MulterMiddleware.uploadPathTmp,
-            fileFilter: (req:any, file:any, cb:any)=>{
-                if(!cdg.inArray(MulterMiddleware.buildExt(file.mimetype), allowedExtension)){
+            fileFilter: (req: any, file: any, cb: any) => {
+                if (!cdg.inArray(MulterMiddleware.buildExt(file.mimetype), allowedExtension)) {
                     req.fileValidationError = 'Type de fichier non autorisé';
-                    return cdg.api(res, new Promise((resolve)=>{
+                    return cdg.api(res, new Promise((resolve) => {
                         resolve({
-                            status:422,
+                            status: 422,
                             message: 'error',
-                            data: cdg.buildApiError({msg: 'Type de fichier non autorisé'})
+                            data: cdg.buildApiError({ msg: 'Type de fichier non autorisé' })
                         });
                     }));
                 }
                 cb(null, true);
             }
         }).single("file");
-        
+
         upload(req, res, function (err: any) {
-            if(req.file) {
+            if (req.file) {
                 if (err instanceof multer.MulterError) {
-                    if(err.code === 'LIMIT_FILE_SIZE') {
+                    if (err.code === 'LIMIT_FILE_SIZE') {
                         err.message = "Fichier trop volumineux"
                     } else if (err.code === 'LIMIT_FILE_COUNT') {
                         err.message = "Nombre maximum de fichier atteint"
                     }
-                    return cdg.api(res, new Promise((resolve)=>{
+                    return cdg.api(res, new Promise((resolve) => {
                         resolve({
                             status: 401,
                             message: 'error',
-                            data: cdg.buildApiError({msg: [err]})
+                            data: cdg.buildApiError({ msg: [err] })
                         });
                     }));
-                } else if(req.fileValidationError) {
-                    return cdg.api(res, new Promise((resolve)=>{
+                } else if (req.fileValidationError) {
+                    return cdg.api(res, new Promise((resolve) => {
                         resolve({
                             status: 401,
                             message: 'error',
-                            data: cdg.buildApiError({msg: req.fileValidationError})
+                            data: cdg.buildApiError({ msg: req.fileValidationError })
                         });
                     }));
                 } else if (err) {
-                    return cdg.api(res, new Promise((resolve)=>{
+                    return cdg.api(res, new Promise((resolve) => {
                         resolve({
                             status: 401,
                             message: 'error',
-                            data: cdg.buildApiError({msg: err.message})
+                            data: cdg.buildApiError({ msg: err.message })
                         });
                     }));
                 }
@@ -146,19 +147,19 @@ export class MulterMiddleware{
         })
     }
 
-    static async multipleVideo(req: any, res: any, next:any) {
-        await MulterMiddleware.buildUploadPath(); 
-        let allowedExtension = ['mp4', 'avi', 'mov', 'wmv','mkv', 'MP4','AVI', 'MOV', 'WMV','MKV'];
+    static async multipleVideo(req: any, res: any, next: any) {
+        await MulterMiddleware.buildUploadPath();
+        let allowedExtension = ['mp4', 'avi', 'mov', 'wmv', 'mkv', 'MP4', 'AVI', 'MOV', 'WMV', 'MKV'];
         const upload = multer({
             dest: MulterMiddleware.uploadPathTmp,
-            fileFilter: (req:any, file:any, cb:any)=>{
-                if(!cdg.inArray(MulterMiddleware.buildExt(file.mimetype), allowedExtension)){
+            fileFilter: (req: any, file: any, cb: any) => {
+                if (!cdg.inArray(MulterMiddleware.buildExt(file.mimetype), allowedExtension)) {
                     req.fileValidationError = 'Type de fichier non autorisé';
-                    return cdg.api(res, new Promise((resolve)=>{
+                    return cdg.api(res, new Promise((resolve) => {
                         resolve({
-                            status:422,
+                            status: 422,
                             message: 'error',
-                            data: cdg.buildApiError({msg: 'Type de fichier non autorisé'})
+                            data: cdg.buildApiError({ msg: 'Type de fichier non autorisé' })
                         });
                     }));
                 }
@@ -168,32 +169,32 @@ export class MulterMiddleware{
 
         upload(req, res, function (err: any) {
             if (err instanceof multer.MulterError) {
-                if(err.code === 'LIMIT_FILE_SIZE') {
+                if (err.code === 'LIMIT_FILE_SIZE') {
                     err.message = "Fichier trop volumineux"
                 } else if (err.code === 'LIMIT_FILE_COUNT') {
                     err.message = "Nombre maximum de fichier atteint"
                 }
-                return cdg.api(res, new Promise((resolve)=>{
+                return cdg.api(res, new Promise((resolve) => {
                     resolve({
                         status: 401,
                         message: 'error',
-                        data: cdg.buildApiError({msg: [err]})
+                        data: cdg.buildApiError({ msg: [err] })
                     });
                 }));
-            } else if(req.fileValidationError) {
-                return cdg.api(res, new Promise((resolve)=>{
+            } else if (req.fileValidationError) {
+                return cdg.api(res, new Promise((resolve) => {
                     resolve({
                         status: 401,
                         message: 'error',
-                        data: cdg.buildApiError({msg: req.fileValidationError})
+                        data: cdg.buildApiError({ msg: req.fileValidationError })
                     });
                 }));
             } else if (err) {
-                return cdg.api(res, new Promise((resolve)=>{
+                return cdg.api(res, new Promise((resolve) => {
                     resolve({
                         status: 401,
                         message: 'error',
-                        data: cdg.buildApiError({msg: err.message})
+                        data: cdg.buildApiError({ msg: err.message })
                     });
                 }));
             }
@@ -202,19 +203,20 @@ export class MulterMiddleware{
         })
     }
 
-    static async multiple(req: any, res: any, next:any) {
-        await MulterMiddleware.buildUploadPath(); 
-        let allowedExtension = ['png', 'jpeg', 'jpg', 'gif', 'PNG','JPEG', 'JPG', 'GIF'];
+    static async multiple(req: any, res: any, next: any) {
+        await MulterMiddleware.buildUploadPath();
+        let allowedExtension = ['png', 'jpeg', 'jpg', 'gif', 'PNG', 'JPEG', 'JPG', 'GIF'];
         const upload = multer({
             dest: MulterMiddleware.uploadPathTmp,
-            fileFilter: (req:any, file:any, cb:any)=>{
-                if(!cdg.inArray(MulterMiddleware.buildExt(file.mimetype), allowedExtension)){
+            fileFilter: (req: any, file: any, cb: any) => {
+                if (!cdg.inArray(MulterMiddleware.buildExt(file.mimetype), allowedExtension)) {
                     req.fileValidationError = 'Type de fichier non autorisé';
-                    return cdg.api(res, new Promise((resolve)=>{
+                    return cdg.api(res, new Promise((resolve) => {
                         resolve({
-                            status:422,
+                            error: true,
+                            status: 422,
                             message: 'error',
-                            data: cdg.buildApiError({msg: 'Type de fichier non autorisé'})
+                            data: cdg.buildApiError({ msg: 'Type de fichier non autorisé' })
                         });
                     }));
                 }
@@ -224,32 +226,35 @@ export class MulterMiddleware{
 
         upload(req, res, function (err: any) {
             if (err instanceof multer.MulterError) {
-                if(err.code === 'LIMIT_FILE_SIZE') {
+                if (err.code === 'LIMIT_FILE_SIZE') {
                     err.message = "Fichier trop volumineux"
                 } else if (err.code === 'LIMIT_FILE_COUNT') {
                     err.message = "Nombre maximum de fichier atteint"
                 }
-                return cdg.api(res, new Promise((resolve)=>{
+                return cdg.api(res, new Promise((resolve) => {
                     resolve({
+                        error: true,
                         status: 401,
                         message: 'error',
-                        data: cdg.buildApiError({msg: [err]})
+                        data: cdg.buildApiError({ msg: [err] })
                     });
                 }));
-            } else if(req.fileValidationError) {
-                return cdg.api(res, new Promise((resolve)=>{
+            } else if (req.fileValidationError) {
+                return cdg.api(res, new Promise((resolve) => {
                     resolve({
+                        error: true,
                         status: 401,
                         message: 'error',
-                        data: cdg.buildApiError({msg: req.fileValidationError})
+                        data: cdg.buildApiError({ msg: req.fileValidationError })
                     });
                 }));
             } else if (err) {
-                return cdg.api(res, new Promise((resolve)=>{
+                return cdg.api(res, new Promise((resolve) => {
                     resolve({
+                        error: true,
                         status: 401,
                         message: 'error',
-                        data: cdg.buildApiError({msg: err.message})
+                        data: cdg.buildApiError({ msg: err.message })
                     });
                 }));
             }
@@ -258,36 +263,39 @@ export class MulterMiddleware{
         })
     }
 
-    static async saveMultiple(files: File[], destination: string | null): Promise<any> {
-        return new Promise((resolve, reject) => {
+    static async saveMultiple(files: File[], destination: any): Promise<any> {
+        return new Promise(async (resolve, reject) => {
             try {
-                let results:any = [];
+                let results: any = [];
 
+                if (!fs.existsSync(destination)) {
+                    await fs.promises.mkdir(destination, { recursive: true })
+                }
                 for (let file of files) {
                     const tempPath = file.path;
-                    let destinationPath = destination ? destination : MulterMiddleware.uploadGalleryImagePath;
+                    let destinationPath = destination ? destination : MulterMiddleware.uploadPath;
                     let fileExt = MulterMiddleware.buildExt(file.mimetype);
                     let fullFilePath = destinationPath + "/" + file.filename + "-" + cdg.getDate() + '.' + fileExt;
-                    
+
                     fs.renameSync(tempPath, fullFilePath);
-                    if(cdg.file.exists(tempPath)) {
+                    if (cdg.file.exists(tempPath)) {
                         fs.rmdirSync(tempPath);
                     }
-                    
+
                     fullFilePath = path.join(destinationPath + "/" + file.filename + "-" + cdg.getDate() + '.' + fileExt)
                     results.push(fullFilePath);
                 }
-                
+
                 return resolve({ error: false, status: 302, message: "Images envoyées.", data: results });
             } catch (error) {
                 return reject({ error: true, status: 500, message: "💀☠💀Une erreur interne s'est produite❗❗❗💀☠💀", data: null })
             }
         })
     }
-    static async deleteOneFile(fullPath: string): Promise<any>{
-        return new Promise<any>((resolve, reject)=>{
+    static async deleteOneFile(fullPath: string): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
             try {
-                const correctPath = fullPath.replace(/\\/g,"/")
+                const correctPath = fullPath.replace(/\\/g, "/")
                 if (!fs.existsSync(correctPath))
                     return resolve({ error: true, message: "💀☠💀Mauvais chemin❗❗❗💀☠💀", data: null })
                 const result = fs.unlinkSync(`./${correctPath}`)
@@ -301,32 +309,32 @@ export class MulterMiddleware{
     static async save(file: File, destination: string | null): Promise<any> {
         return new Promise((resolve, reject) => {
             try {
-                
+
                 const tempPath = file.path;
-                let destinationPath:any=null
-                if(!destination){
+                let destinationPath: any = null
+                if (!destination) {
                     destinationPath = MulterMiddleware.uploadPath
                 }
-                else{
+                else {
                     destinationPath = destination
                 }
-                    
+
 
                 let fileExt = MulterMiddleware.buildExt(file.mimetype);
-                let fullFilePath = destinationPath+"/" + file.filename+"-" +cdg.getDate()+ '.' + fileExt ;
-                
+                let fullFilePath = destinationPath + "/" + file.filename + "-" + cdg.getDate() + '.' + fileExt;
+
                 fs.rename(tempPath, fullFilePath, err => {
-                    if (err)  reject({status: 1, data: err});
-        
-                    if(cdg.file.exists(tempPath)) {
+                    if (err) reject({ status: 1, data: err });
+
+                    if (cdg.file.exists(tempPath)) {
                         fs.rmdirSync(tempPath);
                     }
-                    fullFilePath = path.join(destinationPath+"/" + file.filename+"-" +cdg.getDate()+ '.' + fileExt)
-    
-                    return  resolve({ error: false, status:302, message: "Image envoyé.", data: fullFilePath})
+                    fullFilePath = path.join(destinationPath + "/" + file.filename + "-" + cdg.getDate() + '.' + fileExt)
+
+                    return resolve({ error: false, status: 302, message: "Image envoyé.", data: fullFilePath })
                 });
             } catch (error) {
-                return reject({error:true, status: 500, message:"💀☠💀Une erreur interne s'est produite❗❗❗💀☠💀", data:null})
+                return reject({ error: true, status: 500, message: "💀☠💀Une erreur interne s'est produite❗❗❗💀☠💀", data: null })
             }
         })
     }
@@ -335,7 +343,7 @@ export class MulterMiddleware{
         return mime.extension(mimetype);
     }
 
-    static async syncWriteEtiquetteFile(filename: string, data: any){
+    static async syncWriteEtiquetteFile(filename: string, data: any) {
         /**
         * flags:
         *  - w = Open file for reading and writing. File is created if not exists
@@ -347,22 +355,22 @@ export class MulterMiddleware{
         });
     }
 
-    static async buildUploadPath(){
+    static async buildUploadPath() {
         // CREATE TEMPORY UPLOAD PATH
-        if(!fs.existsSync(this.uploadPathTmp)){
+        if (!fs.existsSync(this.uploadPathTmp)) {
             await fs.promises.mkdir(this.uploadPathTmp, { recursive: true })
         }
         // CREATE UPLOAD PATH
-        if(!fs.existsSync(this.uploadPath)){
-            await fs.promises.mkdir(this.uploadPath, {recursive: true})
+        if (!fs.existsSync(this.uploadPath)) {
+            await fs.promises.mkdir(this.uploadPath, { recursive: true })
         }
         // CREATE UPLOAD PATH
-        if(!fs.existsSync(this.uploadGalleryImagePath)){
-            await fs.promises.mkdir(this.uploadGalleryImagePath, {recursive: true})
+        if (!fs.existsSync(this.uploadGalleryImagePath)) {
+            await fs.promises.mkdir(this.uploadGalleryImagePath, { recursive: true })
         }
 
-        if(!fs.existsSync(this.uploadVideoPath)){
-            await fs.promises.mkdir(this.uploadVideoPath, {recursive: true})
+        if (!fs.existsSync(this.uploadVideoPath)) {
+            await fs.promises.mkdir(this.uploadVideoPath, { recursive: true })
 
         }
     }

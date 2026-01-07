@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import {
     Table,
     TableBody,
@@ -7,7 +7,7 @@ import {
     TableRow,
 } from "../../ui/table";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { baseUrl } from '../../functionGeneral';
+import { baseUrl, getApiMessage } from '../../functionGeneral';
 
 export interface roleI {
     id_role: string | undefined,
@@ -22,7 +22,7 @@ export interface roleEditI extends roleI {
 
 export default function BasicTableRole() {
     const [roles, setRoles] = useState<roleI[]>([])
-    const [error, setError] = useState(null);
+    const [error, setError] = useState({ isError: false, message: "" });
     const [modalOpen, setModalOpen] = useState(false);
     const [newRoleItem, setNewRoleItem] = useState<Partial<roleEditI>>({
         libelle: "",
@@ -53,7 +53,12 @@ export default function BasicTableRole() {
                     body: JSON.stringify(newRole),
                 });
                 setModalOpen(false);
-                window.location.reload()
+                let data = await createrole.json();
+                if (data.error) {
+                    setError({ isError: true, message: data.message });
+                } else {
+                    setError({ isError: false, message: data.message });
+                }
             }
             else {
                 console.log("creating...");
@@ -71,7 +76,12 @@ export default function BasicTableRole() {
                     body: JSON.stringify(newRole),
                 });
                 setModalOpen(false);
-                window.location.reload()
+                let data = await updateRole.json();
+                if (data.error) {
+                    setError({ isError: true, message: data.message });
+                } else {
+                    setError({ isError: false, message: data.message });
+                }
             }
         } catch (error) {
             alert('Error registering/Updateting role: role may already exist.');
@@ -139,6 +149,7 @@ export default function BasicTableRole() {
                 </button>
             </div>
 
+            {getApiMessage(error.isError, error.message)}
             {/* Tableau */}
             <div className="max-w-full overflow-x-auto">
                 <Table>

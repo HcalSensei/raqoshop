@@ -1,8 +1,7 @@
 import { Router, Request, Response } from 'express'
 import { routeDecorator } from '../../../core/router'
-import { cdg, JwtMiddleware } from '../../../utils'
-import { utilisateurController } from '../http'
-import { ValidatorMiddleware } from '../../../utils'
+import { cdg, JwtMiddleware, MulterMiddleware, ValidatorMiddleware } from '../../../utils'
+import { utilisateurController, utilisateurImageCnt } from '../http'
 import { UserMiddleware } from '../http/user.middleware'
 
 class User {
@@ -45,6 +44,22 @@ class User {
             ValidatorMiddleware.validate,
             async (req: Request, res: Response) => {
                 return cdg.api(res, utilisateurController.createClient(req.body));
+            }
+        )
+
+        this.app.post(
+            '/register-driver',
+            UserMiddleware.register(),
+            ValidatorMiddleware.validate,
+            async (req: Request, res: Response) => {
+                return cdg.api(res, utilisateurController.createDriver(req.body));
+            }
+        )
+
+        this.app.get(
+            '/drivers',
+            async (req: Request, res: Response) => {
+                return cdg.api(res, utilisateurController.getAllDriver());
             }
         )
 

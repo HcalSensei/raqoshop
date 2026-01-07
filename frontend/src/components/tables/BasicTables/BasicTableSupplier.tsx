@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import {
     Table,
     TableBody,
@@ -7,15 +7,14 @@ import {
     TableRow,
 } from "../../ui/table";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import Alert from "../../ui/alert/Alert";
-import { baseUrl } from '../../functionGeneral';
+import { baseUrl, getApiMessage } from '../../functionGeneral';
 
 export interface supplierI {
     id_fournisseurs: string;
     nom_fournisseurs: string;
     contact_fournisseurs: string;
     mail_fournisseurs: string;
-    statutFournisseurs?: "Actif" | "En cours de validation" | "Annulée"
+    statutFournisseurs?: string;
     createdAt: string;
     modifyAt: string;
 }
@@ -86,6 +85,13 @@ export default function BasicTableSupplier() {
                     },
                     body: JSON.stringify(newSupplier),
                 });
+                const data = await updateSupplier.json();
+                if (data.error) {
+
+                    setError({ isError: true, message: data.message });
+                } else {
+                    setError({ isError: false, message: data.message });
+                }
                 setModalOpen(false);
                 window.location.reload()
             }
@@ -131,30 +137,6 @@ export default function BasicTableSupplier() {
 
     }
 
-    const getApiMessage = () => {
-        if (error.isError && error.message !== "") {
-            return (
-                <Alert
-                    variant="error"
-                    title="Error"
-                    message={error.message}
-                    showLink={false}
-                />
-            )
-        } else if (!error.isError && error.message !== "") {
-            return (
-                <Alert
-                    variant="success"
-                    title="Success"
-                    message={error.message}
-                    showLink={false}
-                />
-            )
-        } else {
-            return null;
-        }
-    }
-
     useEffect(() => {
         const fetchSuppliers = async () => {
             try {
@@ -184,7 +166,7 @@ export default function BasicTableSupplier() {
                 </button>
             </div>
 
-            {getApiMessage()}
+            {getApiMessage(error.isError, error.message)}
 
             {/* Tableau */}
             <div className="max-w-full overflow-x-auto">

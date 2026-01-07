@@ -1,8 +1,9 @@
 import { mysqlHelper } from '../../../core/db'
 import { query } from '../../model'
-import { cdg, JwtMiddleware } from '../../../utils'
+import { cdg, JwtMiddleware, MulterMiddleware } from '../../../utils'
 import bcrypt from 'bcrypt'
-import { userBoutiqueI, roleI } from './user.interface'
+import path, { resolve } from "path"
+import { userBoutiqueI, roleI, utilisateurImageI } from './user.interface'
 import { v4 as uuidv4 } from 'uuid';
 
 export class utilisateurController {
@@ -79,6 +80,68 @@ export class utilisateurController {
             }
         })
 
+    }
+
+    static async createDriver(user: any): Promise<any> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const userId = uuidv4();
+                const connexion = await mysqlHelper.connect()
+                const sqlInsert = 'INSERT INTO utilisateur(id_utilisateur, nom, email, telephone, numero_CNI, numero_permis, login, mot_de_passe, statutUser, createdAt, modifiyAt) VALUES (?,?,?,?,?,?,?,?,"Actif",NOW(),NOW())'
+                let result = await query(connexion, sqlInsert, [
+                    userId,
+                    user.nom,
+                    user.email,
+                    user.telephone,
+                    user.numero_CNI,
+                    user.numero_permis,
+                    "",
+                    "",
+                ])
+                result.data.id_utilisateur = userId
+                const sqlRole = 'INSERT INTO utilisateur_role(id_utilisateur, id_role, createdAt, modifyAt, statutUtilisateurRole) VALUES (?,?,NOW(),NOW(),"Actif")';
+                const resultRole = await query(connexion, sqlRole, [
+                    userId,
+                    user.roleid
+                ])
+                connexion.end()
+                resolve({ status: 200, error: false, message: "Ajout d'un nouvel utilisateur", data: result.data })
+            } catch (error) {
+                console.warn(error);
+                return reject({ error: true, status: 500, message: "une erreur interne s'est produite a la creation de l'utilisateur livreur", data: error })
+            }
+        })
+    }
+
+    static async getAllDriver(): Promise<any> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const connexion = await mysqlHelper.connect()
+                const sql = 'SELECT driver.id_utilisateur,driver.nom, driver.email, driver.telephone, driver.numero_CNI, driver.numero_permis,driver.statutUser, driver.createdAt, driver.modifiyAt,r.libelle FROM utilisateur as driver INNER JOIN utilisateur_role ro ON ro.id_utilisateur = driver.id_utilisateur INNER JOIN role r ON r.id_role = ro.id_role WHERE r.libelle="Livreur"'
+                let result = await query(connexion, sql, [])
+
+                // connexion.end()
+
+                // const connexion2 = await mysqlHelper.connect()
+                for (let i = 0; i < result.data.length; i++) {
+                    const element = result.data[i]
+                    const sqlOrder = 'SELECT l.id_livraison, l.id_livreur, l.statut as statutLivraison, l.createdAt as createdAtLivraison, l.modifyAt as modifiyAtLivraison, c.id_commande,c.reference ,c.id_client, c.statut as statutCommande, c.createdAt as createdAtCommande, c.modifiyAt as modifiyAtCommande, c.date_commande, c.type_commande, c.montant_total FROM livraison l INNER JOIN  commande c ON c.id_commande = l.id_commande WHERE l.id_livreur = ? AND c.type_commande = "Livraison"'
+                    const order = await query(connexion, sqlOrder, [element.id_utilisateur])
+                    element.order = order.data
+                }
+
+                for (let i of result.data) {
+                    const sqlImage = 'SELECT objet_photo, file_path FROM images WHERE utilisateurId = ?'
+                    const image = await query(connexion, sqlImage, [i.id_utilisateur])
+                    i.images = image.data
+                }
+                connexion.end()
+                resolve({ status: 200, error: false, message: "Liste des utilisateurs livreurs", data: result.data })
+            } catch (error) {
+                console.warn(error);
+                return reject({ error: true, status: 500, message: "une erreur interne s'est produite a la recuperation de la liste des utilisateurs", data: error })
+            }
+        })
     }
 
     static async update(user: userBoutiqueI): Promise<any> {
@@ -363,6 +426,69 @@ export class UtilisateurRoleController {
             } catch (error) {
                 console.warn(error);
                 return reject({ error: true, status: 500, message: "une erreur interne s'est produite lors du retrait du rôle à l'utilisateur", data: error })
+            }
+        })
+    }
+}
+
+export class utilisateurImageCnt {
+    static async add(userImage: any, pathFile: any): Promise<any> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let saveFilePath: any
+                const connexion = await mysqlHelper.connect()
+                let sqlUser = 'SELECT nom FROM utilisateur WHERE id_utilisateur=?';
+                const user = await query(connexion, sqlUser, [userImage.utilisateurId])
+
+                if (user.data.length === 0) {
+                    return resolve({
+                        status: 422,
+                        message: "L'utilisateur n'exist pas",
+                        data: null,
+                        error: true
+                    });
+                }
+
+                if (pathFile.length == 0) {
+                    return resolve({
+                        status: 422,
+                        message: "Aucune image à enregistrer",
+                        data: null,
+                        error: true
+                    });
+                }
+                let result: any = []
+                saveFilePath = await MulterMiddleware.saveMultiple(pathFile, path.join(MulterMiddleware.uploadPath, `${user.data[0].nom}`));
+                for (let filePath of saveFilePath.data) {
+                    let sql = 'INSERT INTO images(ImagesId,utilisateurId,objet_photo,file_path,createdAt,modifiyAt) VALUES (?,?,?,?,NOW(),NOW())';
+                    const queryResult = await query(connexion, sql, [
+                        uuidv4(),
+                        userImage.utilisateurId,
+                        userImage.objet_photo,
+                        filePath
+                    ])
+                    result.push(queryResult.data)
+                }
+                connexion.end()
+                resolve({ status: 200, error: false, message: "Ajout d'une nouvelle image", data: result })
+            } catch (error) {
+                console.warn(error);
+                return reject({ error: true, status: 500, message: "une erreur interne s'est produite a l'ajout de l'image", data: error })
+            }
+        })
+    }
+
+    static async getAll(): Promise<any> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const connexion = await mysqlHelper.connect()
+                const sql = 'SELECT * FROM images'
+                const result = await query(connexion, sql, [])
+                connexion.end()
+                resolve({ status: 200, error: false, message: "Liste des images", data: result.data })
+            } catch (error) {
+                console.warn(error);
+                return reject({ error: true, status: 500, message: "une erreur interne s'est produite lors de la récupération des images", data: error })
             }
         })
     }

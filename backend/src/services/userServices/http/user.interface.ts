@@ -1,37 +1,46 @@
-export interface userBoutiqueI{
-    id_utilisateur : string
-    ,nom: string
+export interface userBoutiqueI {
+    id_utilisateur: string
+    , nom: string
     , email: string
-    ,  telephone : string
-    , numero_CNI : string
-    ,numero_permis : string
+    , telephone: string
+    , numero_CNI: string
+    , numero_permis: string
     , login: string
     , mot_de_passe: string
-    ,statutUser: string
+    , statutUser: string
     , createdAt: string
     , modifyAt: string
-    ,roleid: string,
+    , roleid: string,
     // viewAccess: number,
     // createAccess: number,
     // updateAccess: number,
     // deleteAccess: number
-   
+
 }
 
-export interface roleI{
-    id_role : string,
-    libelle : string,
-    description : string,
-    createdAt : string,
-    modifyAt : string,
-    statutRole : string
+export interface roleI {
+    id_role: string,
+    libelle: string,
+    description: string,
+    createdAt: string,
+    modifyAt: string,
+    statutRole: string
 }
 
-export interface utilisateurRoleI{
+export interface utilisateurRoleI {
     // id_utilisateur_role : string,
-    id_utilisateur : string,
-    id_role : string,
-    createdAt : string,
-    modifyAt : string,
-    statutUtilisateurRole : number
+    id_utilisateur: string,
+    id_role: string,
+    createdAt: string,
+    modifyAt: string,
+    statutUtilisateurRole: number
+}
+
+export interface utilisateurImageI {
+    IamgesID: string,
+    utilisateurId: string,
+    objet_photo: string,
+    file_path: string,
+    createdAt: string,
+    modifiyAt: string
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { baseUrl } from '../../functionGeneral';
+import { baseUrl, getApiMessage } from '../../functionGeneral';
 import { supplierI } from "./BasicTableSupplier";
 import { BoxIcon } from "../../../icons";
 import {
@@ -9,7 +9,6 @@ import {
   TableHeader,
   TableRow,
 } from "../../ui/table";
-import Alert from "../../ui/alert/Alert";
 import Badge from "../../ui/badge/Badge";
 import Button from "../../ui/button/Button";
 
@@ -172,29 +171,6 @@ export default function BaseTableStock() {
     setModalOpen(false);
   }
 
-  const getApiMessage = () => {
-    if (error.isError && error.message !== "") {
-      return (
-        <Alert
-          variant="error"
-          title="Error"
-          message={error.message}
-          showLink={false}
-        />
-      )
-    } else if (!error.isError && error.message !== "") {
-      return (
-        <Alert
-          variant="success"
-          title="Success"
-          message={error.message}
-          showLink={false}
-        />
-      )
-    } else {
-      return null;
-    }
-  }
 
   const showAddStockModal = (id_article: string) => {
     const ArticleToStock = stock.find((item) => item.id_article === id_article);
@@ -255,7 +231,7 @@ export default function BaseTableStock() {
         </select>
       </div>
 
-      {getApiMessage()}
+      {getApiMessage(error.isError, error.message)}
       {/* Tableau */}
       <div className="max-w-full overflow-x-auto">
         <Table>
