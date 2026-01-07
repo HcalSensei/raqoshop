@@ -11,7 +11,10 @@ import Badge from "../../ui/badge/Badge";
 import QRCode from "react-qr-code";
 import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import Button from "../../ui/button/Button";
-
+import logo from "/images/logo/logo.png";
+import { Image } from "@react-pdf/renderer";
+import { EyeIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 // --- Données Statiques ---
 const DRIVERS = ["Moussa Koné", "Sékou Touré", "Alain Koffi", "Yao Kouassi"];
 
@@ -40,41 +43,190 @@ export interface roleI {
   statutRole?: "Actif" | "En cours de validation" | "Annulée"
 }
 
-// --- Styles PDF ---
+
+// --- Style pour le PDF ---
 const pdfStyles = StyleSheet.create({
-  page: { padding: 30, fontSize: 10 },
-  header: { marginBottom: 20, borderBottomWidth: 1, paddingBottom: 10 },
-  row: { flexDirection: "row", justifyContent: "space-between", marginBottom: 5 },
-  cell: { flex: 1 },
-  total: { marginTop: 20, textAlign: "right", fontSize: 14, fontWeight: "bold" }
+  page: {
+    paddingTop: 30,
+    paddingBottom: 110, 
+    paddingHorizontal: 30,
+    fontSize: 11,
+  },
+
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+
+  logo: {
+    width: 232,
+    height: 76,
+  },
+
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+
+  infoBlock: {
+    marginBottom: 15,
+  },
+
+  table: {
+    borderWidth: 1,
+    borderColor: "#000",
+  },
+
+  tableRow: {
+    flexDirection: "row",
+  },
+
+  tableHeader: {
+    backgroundColor: "#eee",
+    borderBottomWidth: 1,
+  },
+
+  cellProduct: {
+    flex: 2,
+    padding: 5,
+    borderRightWidth: 1,
+  },
+
+  cellQty: {
+    flex: 1,
+    padding: 5,
+    borderRightWidth: 1,
+    textAlign: "center",
+  },
+
+  cellTotal: {
+    flex: 1,
+    padding: 5,
+    textAlign: "right",
+  },
+
+  total: {
+    marginTop: 10,
+    textAlign: "right",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+
+  /* ELEMENTS FIXÉ */
+  mentions: {
+    position: "absolute",
+    bottom: 55,
+    left: 30,
+    right: 200,
+    fontSize: 9,
+    lineHeight: 1.4,
+  },
+
+  stampBox: {
+    position: "absolute",
+    bottom: 55,
+    right: 30,
+    width: 150,
+    height: 80,
+    borderWidth: 1,
+    padding: 5,
+    textAlign: "center",
+    fontSize: 9,
+  },
+
+  footer: {
+    position: "absolute",
+    bottom: 20,
+    left: 30,
+    right: 30,
+    fontSize: 9,
+    textAlign: "center",
+    borderTopWidth: 1,
+    paddingTop: 5,
+  },
 });
 
+
+// --- VISUEL PDF---
 const OrderPDF = ({ order }: { order: Order }) => (
   <Document>
-    <Page style={pdfStyles.page}>
-      <Text style={{ fontSize: 18, marginBottom: 10 }}>BON DE COMMANDE - {order.reference}</Text>
-      <View style={{ marginBottom: 20 }}>
-        <Text>Client: {order.client}</Text>
-        <Text>Type: {order.type_commande} {order.type_commande === "Livraison" && `| Livreur: ${order.driver}`}</Text>
-        <Text>Lieu: {order.location}</Text>
+    <Page size="A4" style={pdfStyles.page}>
+
+      {/* HEADER */}
+      <View style={pdfStyles.header}>
+        <Image style={pdfStyles.logo} src={logo}  />
+        <Text style={pdfStyles.title}>
+          BON DE COMMANDE - {order.reference}
+        </Text>
       </View>
-      <View style={{ borderBottomWidth: 1, flexDirection: "row", paddingBottom: 5, marginBottom: 5 }}>
-        <Text style={{ flex: 2 }}>Produit</Text>
-        <Text style={{ flex: 1 }}>Qté</Text>
-        <Text style={{ flex: 1, textAlign: "right" }}>Total</Text>
+
+      {/* INFOS */}
+      <View style={pdfStyles.infoBlock}>
+        <Text>Client : {order.client}</Text>
+        <Text>
+          Type : {order.type_commande}
+          {order.type_commande === "Livraison" && ` | Livreur : ${order.driver}`}
+        </Text>
+        <Text>Lieu : {order.location}</Text>
       </View>
-      {order.items.map((item, i) => (
-        <View key={i} style={{ flexDirection: "row", marginBottom: 3 }}>
-          <Text style={{ flex: 2 }}>{item.nom}</Text>
-          <Text style={{ flex: 1 }}>{item.quantity}</Text>
-          <Text style={{ flex: 1, textAlign: "right" }}>{item.prix}</Text>
+
+      {/* TABLE */}
+      <View style={pdfStyles.table}>
+        <View style={[pdfStyles.tableRow, pdfStyles.tableHeader]}>
+          <Text style={pdfStyles.cellProduct}>Produit</Text>
+          <Text style={pdfStyles.cellQty}>Qté</Text>
+          <Text style={pdfStyles.cellTotal}>Total</Text>
         </View>
-      ))}
-      <Text style={pdfStyles.total}>Total: {order.montant_total}</Text>
+
+        {order.items.map((item, i) => (
+          <View key={i} style={pdfStyles.tableRow}>
+            <Text style={pdfStyles.cellProduct}>{item.nom}</Text>
+            <Text style={pdfStyles.cellQty}>{item.quantity}</Text>
+            <Text style={pdfStyles.cellTotal}>{item.prix}</Text>
+          </View>
+        ))}
+      </View>
+
+      {/* TOTAL */}
+      <Text style={pdfStyles.total}>Total : {order.montant_total}</Text>
+
+      {/* MENTIONS */}
+      <View style={pdfStyles.mentions} fixed>
+        <Text>
+          • Garantie valable 3 jours après la date de livraison.
+        </Text>
+        <Text>
+          • Toute réclamation doit être formulée dans ce délai.
+        </Text>
+        <Text>
+          • Les marchandises vendues ne sont ni reprises ni échangées après validation.
+        </Text>
+        <Text>
+          • Le présent document tient lieu de bon de livraison et de facture proforma.
+        </Text>
+      </View>
+
+      {/* CACHET & SIGNATURE */}
+      
+        <View style={pdfStyles.stampBox} fixed>
+          <Text>Cachet de l'entreprise</Text>
+        </View>
+
+      {/* FOOTER FIXE */}
+      <Text
+      
+        style={pdfStyles.footer}
+        fixed
+        render={({ pageNumber, totalPages }) =>
+          `Page ${pageNumber} / ${totalPages} — Document généré le ${new Date().toLocaleDateString()}`
+        }
+      />
+
     </Page>
   </Document>
 );
-
 export default function BaseTableOrder() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [search, setSearch] = useState("");
@@ -180,6 +332,12 @@ export default function BaseTableOrder() {
     setNewOrder({ id_client: "", type_commande: "Livraison", driver: "", location: "", items: [], prix: 0 });
   };
 
+
+// Fonction pour mettre à jour le statut de la commande 
+const handleFinalize = (orderId: number) => {
+ 
+};
+
   let filteredArticles: any[] = articles.filter((item) => {
     const matchSearch = item.nom.toLowerCase().includes(searchArticle.toLowerCase());
     return matchSearch;
@@ -218,41 +376,89 @@ export default function BaseTableOrder() {
   }, []);
 
   return (
-    <div className="p-4 md:p-6 space-y-6 bg-gray-50 min-h-screen">
+    <div className="p-4 md:p-6 space-y-6 min-h-screen">
 
       {/* Barre d'actions */}
-      <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-stroke">
-        <input type="text" placeholder="Rechercher..." className="w-64 p-2 border rounded-lg outline-none focus:border-primary" onChange={(e) => setSearch(e.target.value)} />
-        <Button onClick={() => setIsAddModalOpen(true)}>+ Nouvelle Commande</Button>
+      
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Gestion des Commandes</h2>
+        <div className="flex gap-3">
+            <input
+            type="text"
+            placeholder="Rechercher une commande..."
+            className="w-64 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 outline-none"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            />
+            <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="rounded-lg bg-brand-500 px-4 py-2 text-white text-sm font-medium hover:bg-brand-600 transition-colors">
+            + Nouvelle commande
+            </button>
+            <button
+            onClick={() => downloadOrderList()}
+            className="rounded-lg bg-brand-500 px-4 py-2 text-white text-sm font-medium hover:bg-brand-600 transition-colors">
+              <ArrowDownTrayIcon className="h-6 w-6 text-white-500" />
+            </button>
+        </div>
       </div>
 
       {/* Tableau Principal */}
-      <div className="bg-white rounded-xl shadow-sm border border-stroke overflow-hidden">
+      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+        <div className="max-w-full overflow-x-auto">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-gray-50 dark:bg-gray-800/50">
             <TableRow className="bg-gray-50">
-              <TableCell isHeader>Réf</TableCell>
-              <TableCell isHeader>Client</TableCell>
-              <TableCell isHeader>Type</TableCell>
-              <TableCell isHeader>Livreur</TableCell>
-              <TableCell isHeader className="text-right">Total</TableCell>
-              <TableCell isHeader>Action</TableCell>
+              <TableCell isHeader className="px-5 py-3 text-center text-theme-xs font-bold uppercase text-gray-500">Réference</TableCell>
+              <TableCell isHeader className="px-5 py-3 text-center text-theme-xs font-bold uppercase text-gray-500">Client</TableCell>
+              <TableCell isHeader className="px-5 py-3 text-center text-theme-xs font-bold uppercase text-gray-500">Type</TableCell>
+              <TableCell isHeader className="px-5 py-3 text-center text-theme-xs font-bold uppercase text-gray-500">Livreur</TableCell>
+              <TableCell isHeader className="px-5 py-3 text-center text-theme-xs font-bold uppercase text-gray-500">Total</TableCell>
+              <TableCell isHeader className="px-5 py-3 text-center text-theme-xs font-bold uppercase text-gray-500">Action</TableCell>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
             {orders.filter(o => o.client.toLowerCase().includes(search.toLowerCase())).map(o => (
               <TableRow key={o.id}>
-                <TableCell className="font-bold text-primary">{o.reference}</TableCell>
-                <TableCell>{o.client}</TableCell>
-                <TableCell><Badge color={o.type_commande === "Livraison" ? "info" : "success"}>{o.type_commande}</Badge></TableCell>
-                <TableCell className="text-sm italic">{o.driver}</TableCell>
-                <TableCell className="text-right font-bold">{o.montant_total}</TableCell>
-                <TableCell><button onClick={() => setSelectedOrder(o)} className="text-primary hover:underline">Détails</button></TableCell>
+                <TableCell className="font-bold text-primary">
+                  <div className="flex justify-center text-sm"> {o.reference} </div>
+                  </TableCell>
+                <TableCell> <div className="flex justify-center text-sm"> {o.client} </div></TableCell>
+                <TableCell> <div className="flex justify-center text-sm"> <Badge color={o.type_commande === "Livraison" ? "info" : "success"}>{o.type_commande}</Badge> </div></TableCell>
+                <TableCell className="text-sm italic"> <div className="flex justify-center text-sm"> {o.driver} </div></TableCell>
+                <TableCell className="text-right font-bold"> <div className="flex justify-center text-sm"> {o.montant_total} </div></TableCell>
+                <TableCell>
+                <td className="py-5 px-4">
+                      <div className="flex items-center space-x-3.5">
+                        {/* Bouton Détails */}
+                        <button
+                          onClick={() => setSelectedOrder(o)}
+                          className="hover:text-primary"
+                          title="Voir Détails"
+                        >
+                          <EyeIcon className="h-5 w-5" /> 
+                        </button>
+
+                        {/* Bouton Finaliser (uniquement si Pending) */}
+                        
+                          <button
+                           
+                            className="text-success hover:scale-110 transition-transform"
+                            title="Finaliser la commande"
+                          >
+                           <CheckCircleIcon className="h-5 w-5" />
+                          </button>
+                      
+                      </div>
+                    </td>
+
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
+    </div>
 
       {/* MODAL AJOUT */}
       {isAddModalOpen && (
