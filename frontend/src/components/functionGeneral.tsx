@@ -1,6 +1,6 @@
 import Alert from "./ui/alert/Alert";
 
-export const baseUrl = 'http://192.168.1.17:5359/api/raqoshop/';
+export const baseUrl = 'http://192.168.72.1:5359/api/raqoshop/';
 
 export function formatDeDate(dateSended: Date | string): string {
   let dateObject = new Date(dateSended);
