@@ -17,8 +17,13 @@ import {
   TableHeader,
   TableRow,
 } from "../../ui/table";
+import logo from "/images/logo/logo.png";
+import { Image } from "@react-pdf/renderer";
 import Badge from "../../ui/badge/Badge";
 import Button from "../../ui/button/Button";
+import { 
+  ArrowDownTrayIcon
+} from "@heroicons/react/24/outline";
 
 // --- Interfaces ---
 interface StockItem {
@@ -60,7 +65,9 @@ const pdfStyles = StyleSheet.create({
   tableColHeader: { width: "20%", backgroundColor: '#F9FAFB', padding: 5 },
   tableCol: { width: "20%", padding: 5 },
   tableCellHeader: { fontWeight: 'bold', color: '#374151', fontSize: 9 },
-  tableCell: { color: '#4B5563' }
+  tableCell: { color: '#4B5563' },
+  logo: { width: 232, height: 76,},
+  footer: { position: "absolute", bottom: 20, left: 30, right: 30, fontSize: 9, textAlign: "center", borderTopWidth: 1, paddingTop: 5,},
 });
 
 
@@ -68,7 +75,8 @@ const StockPDFDocument = ({ data, suppliers }: { data: StockItem[], suppliers: s
   <Document>
     <Page size="A4" style={pdfStyles.page}>
       <View style={pdfStyles.header}>
-        <Text style={pdfStyles.title}>Rapport d'Inventaire Stock</Text>
+      <Image style={pdfStyles.logo} src={logo}  />
+        <Text style={pdfStyles.title}>Rapport d'Inventaire de Stock</Text>
         <Text style={pdfStyles.date}>Généré le {new Date().toLocaleDateString()} à {new Date().toLocaleTimeString()}</Text>
       </View>
       
@@ -95,6 +103,14 @@ const StockPDFDocument = ({ data, suppliers }: { data: StockItem[], suppliers: s
           </View>
         ))}
       </View>
+      <Text
+      
+        style={pdfStyles.footer}
+        fixed
+        render={({ pageNumber, totalPages }) =>
+          `Page ${pageNumber} / ${totalPages}`
+        }
+      />
     </Page>
   </Document>
 );
@@ -213,22 +229,33 @@ export default function BaseTableStock() {
                 onChange={(e) => setSearch(e.target.value)}
             />
             
-            {/* BOUTON PDF DOWNLOAD LINK */}
-            <PDFDownloadLink
-                document={<StockPDFDocument data={filteredStock} suppliers={suppliers} />}
-                fileName={`Stock_${new Date().toLocaleDateString()}.pdf`}
-                className="inline-flex items-center justify-center rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
-            >
-                {({ loading }) => (loading ? "Calcul..." : "Télécharger PDF")}
-            </PDFDownloadLink>
         </div>
 
-        <button
-          onClick={() => setModalOpen(true)}
-          className="rounded-lg bg-green-600 px-4 py-2 text-white text-sm font-medium hover:bg-green-700 transition-all"
-        >
-          Entrée en stock
-        </button>
+        <div className="flex gap-3">
+          <PDFDownloadLink
+                document={<StockPDFDocument data={filteredStock} suppliers={suppliers} />}
+                fileName={`Stock_${new Date().toLocaleDateString()}.pdf`}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+          >
+            {({ loading }) =>
+              loading ? (
+                "Calcul..."
+              ) : (
+                <>
+                  <ArrowDownTrayIcon className="size-4" />
+                  <span>Inventaire</span>
+                </>
+              )
+            }
+          </PDFDownloadLink>
+
+          <button
+            onClick={() => setModalOpen(true)}
+            className="rounded-lg bg-green-600 px-4 py-2 text-white text-sm font-medium hover:bg-green-700 transition-all"
+          >
+            Entrée en stock
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-3">

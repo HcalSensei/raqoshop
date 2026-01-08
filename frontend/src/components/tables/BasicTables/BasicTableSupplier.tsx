@@ -5,8 +5,10 @@ import {
   Text, 
   View, 
   StyleSheet, 
-  PDFDownloadLink 
+  PDFDownloadLink, 
+  Image
 } from "@react-pdf/renderer";
+import logo from "/images/logo/logo.png";
 import { 
   PencilSquareIcon, 
   TrashIcon, 
@@ -47,30 +49,42 @@ export interface errorTI {
 const pdfStyles = StyleSheet.create({
   page: { padding: 30, fontSize: 10 },
   title: { fontSize: 16, marginBottom: 20, fontWeight: 'bold' },
-  table: { display: "flex", width: "auto", borderStyle: "solid", borderBottomWidth: 1, borderBottomColor: '#EEE' },
-  row: { flexDirection: "row", borderTopColor: '#EEE', borderTopWidth: 1, padding: 8 },
+  date: { fontSize: 8, color: '#6b7280', marginTop: 4 },
+  table: { display: "flex", width: "auto", marginTop: 15 },
+  tableRow: { flexDirection: "row", borderBottomColor: '#E5E7EB', borderBottomWidth: 1, minHeight: 25, alignItems: 'center' },
   header: { backgroundColor: '#F9FAFB', fontWeight: 'bold' },
-  col: { width: "25%" }
+  col: { width: "25%" },
+  logo: { width: 232, height: 76,},
+  footer: { position: "absolute", bottom: 20, left: 30, right: 30, fontSize: 9, textAlign: "center", borderTopWidth: 1, paddingTop: 5,},
 });
 
 const SupplierPDF = ({ data }: { data: supplierI[] }) => (
   <Document>
     <Page size="A4" style={pdfStyles.page}>
-      <Text style={pdfStyles.title}>Liste des Fournisseurs</Text>
-      <View style={[pdfStyles.row, pdfStyles.header]}>
-        <Text style={pdfStyles.col}>Nom</Text>
+        <Image style={pdfStyles.logo} src={logo}  />
+        <Text style={pdfStyles.title}>Liste des Fournisseurs</Text>
+      <View style={[pdfStyles.tableRow, pdfStyles.header]}>
+        <Text style={pdfStyles.col}>Fournisseurs</Text>
         <Text style={pdfStyles.col}>Contact</Text>
         <Text style={pdfStyles.col}>Email</Text>
         <Text style={pdfStyles.col}>Statut</Text>
       </View>
       {data.map((s, i) => (
-        <View key={i} style={pdfStyles.row}>
+        <View key={i} style={pdfStyles.tableRow}>
           <Text style={pdfStyles.col}>{s.nom_fournisseurs}</Text>
           <Text style={pdfStyles.col}>{s.contact_fournisseurs}</Text>
           <Text style={pdfStyles.col}>{s.mail_fournisseurs}</Text>
           <Text style={pdfStyles.col}>{s.statutFournisseurs}</Text>
         </View>
       ))}
+      <Text
+      style={pdfStyles.footer}
+      fixed
+      render={({ pageNumber, totalPages }) =>
+        `Page ${pageNumber} / ${totalPages}`
+      }
+     
+    />
     </Page>
   </Document>
 );
