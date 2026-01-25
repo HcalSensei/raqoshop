@@ -30,7 +30,7 @@ interface Order {
   status: "En cours" | "Livré"; type_commande: "Livraison" | "Retrait Magasin";
   driver: string; location: string; items: OrderItem[];
 }
-interface Client { id_client: string; nom: string; email: string; telephone: string; roleid: string; statutUser: 'Actif' | 'Inactif'; updating: boolean; }
+interface Client { id_client  : string; nom: string; email: string; telephone: string; roleid: string; statutUser: 'Actif' | 'Inactif'; updating: boolean; }
 interface roleI { id_role: string; libelle: string; description: string; }
 
 // --- Style pour le PDF ---
@@ -236,7 +236,7 @@ export default function BaseTableOrder() {
   const [newUserItem, setNewUserItem] = useState<Partial<Client>>({ nom: "", email: "", telephone: "", roleid: "", statutUser: "Actif" });
   
   const [newOrder, setNewOrder] = useState({
-    id_client: "", type_commande: "Livraison" as "Livraison" | "Retrait Magasin",
+    id_client : "", type_commande: "Livraison" as "Livraison" | "Retrait Magasin",
     driver: "", location: "", items: [] as OrderItem[]
   });
 
@@ -294,7 +294,7 @@ export default function BaseTableOrder() {
   };
 
   const handleSaveOrder = async () => {
-    const clientObj = clients.find(c => c.id_client === newOrder.id_client);
+    const clientObj = clients.find(c => c.id_client  === newOrder.id_client );
     const order: Order = {
       id: Date.now(),
       reference: `CMD-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -316,7 +316,7 @@ export default function BaseTableOrder() {
       });
       setOrders([order, ...orders]);
       setIsAddModalOpen(false);
-      setNewOrder({ id_client: "", type_commande: "Livraison", driver: "", location: "", items: [] });
+      setNewOrder({ id_client : "", type_commande: "Livraison", driver: "", location: "", items: [] });
     } catch (error) {
       console.error(error);
     }
@@ -520,11 +520,11 @@ export default function BaseTableOrder() {
                 <label className="text-xs font-bold text-gray-400 block mb-1">CLIENT</label>
                 <select 
                   className="w-full rounded-lg border px-3 py-2" 
-                  value={newOrder.id_client} 
-                  onChange={(e) => setNewOrder({ ...newOrder, id_client: e.target.value })}
+                  value={newOrder.id_client } 
+                  onChange={(e) => setNewOrder({ ...newOrder, id_client : e.target.value })}
                 >
                   <option value="">Sélectionner...</option>
-                  {clients.map(c => <option key={c.id_client} value={c.id_client}>{c.nom}</option>)}
+                  {clients.map(c => <option key={c.id_client } value={c.id_client }>{c.nom}</option>)}
                 </select>
               </div>
               <div>
@@ -585,7 +585,7 @@ export default function BaseTableOrder() {
               <div className="text-xl font-bold">Total: <span className="text-primary">{calculateTotal().toLocaleString()} CFA</span></div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>Annuler</Button>
-                <Button onClick={handleSaveOrder} disabled={!newOrder.id_client || newOrder.items.length === 0}>Enregistrer</Button>
+                <Button onClick={handleSaveOrder} disabled={!newOrder.id_client  || newOrder.items.length === 0}>Enregistrer</Button>
               </div>
             </div>
           </div>

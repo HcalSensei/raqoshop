@@ -33,7 +33,6 @@ class User {
             UserMiddleware.verifyUniqueLogin,
             ValidatorMiddleware.validate,
             async (req: Request, res: Response) => {
-
                 return cdg.api(res, utilisateurController.create(req.body));
             }
         )

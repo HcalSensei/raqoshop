@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { 
-  Document, 
-  Page, 
-  Text, 
-  View, 
-  StyleSheet, 
-  PDFDownloadLink 
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  PDFDownloadLink
 } from "@react-pdf/renderer";
 import { baseUrl, getApiMessage } from '../../functionGeneral';
 import { supplierI } from "./BasicTableSupplier";
@@ -21,7 +21,7 @@ import logo from "/images/logo/logo.png";
 import { Image } from "@react-pdf/renderer";
 import Badge from "../../ui/badge/Badge";
 import Button from "../../ui/button/Button";
-import { 
+import {
   ArrowDownTrayIcon
 } from "@heroicons/react/24/outline";
 
@@ -33,7 +33,7 @@ interface StockItem {
   codeBar: string;
   nom: string;
   prix: number;
-  stock: any[]; 
+  stock: any[];
   statutArticle: "En vente" | "Non vendable";
 }
 
@@ -66,8 +66,8 @@ const pdfStyles = StyleSheet.create({
   tableCol: { width: "20%", padding: 5 },
   tableCellHeader: { fontWeight: 'bold', color: '#374151', fontSize: 9 },
   tableCell: { color: '#4B5563' },
-  logo: { width: 232, height: 76,},
-  footer: { position: "absolute", bottom: 20, left: 30, right: 30, fontSize: 9, textAlign: "center", borderTopWidth: 1, paddingTop: 5,},
+  logo: { width: 232, height: 76, },
+  footer: { position: "absolute", bottom: 20, left: 30, right: 30, fontSize: 9, textAlign: "center", borderTopWidth: 1, paddingTop: 5, },
 });
 
 
@@ -75,11 +75,11 @@ const StockPDFDocument = ({ data, suppliers }: { data: StockItem[], suppliers: s
   <Document>
     <Page size="A4" style={pdfStyles.page}>
       <View style={pdfStyles.header}>
-      <Image style={pdfStyles.logo} src={logo}  />
+        <Image style={pdfStyles.logo} src={logo} />
         <Text style={pdfStyles.title}>Rapport d'Inventaire de Stock</Text>
         <Text style={pdfStyles.date}>Généré le {new Date().toLocaleDateString()} à {new Date().toLocaleTimeString()}</Text>
       </View>
-      
+
       <View style={pdfStyles.table}>
         <View style={[pdfStyles.tableRow, { backgroundColor: '#F9FAFB' }]}>
           <View style={pdfStyles.tableColHeader}><Text style={pdfStyles.tableCellHeader}>Produit</Text></View>
@@ -104,7 +104,7 @@ const StockPDFDocument = ({ data, suppliers }: { data: StockItem[], suppliers: s
         ))}
       </View>
       <Text
-      
+
         style={pdfStyles.footer}
         fixed
         render={({ pageNumber, totalPages }) =>
@@ -164,25 +164,25 @@ export default function BaseTableStock() {
     e.preventDefault();
     if (!newItem.nom || !newItem.reference || !newItem.codeBar) return;
     try {
-        const newStockItemData = {
-          id_article: "",
-          id_fournisseurs: newItem.id_fournisseurs,
-          nom: newItem.nom,
-          reference: newItem.reference,
-          codeBar: newItem.codeBar,
-          prix: newItem.prix,
-          statutArticle: newItem.statutArticle,
-        };
-        const response = await fetch(`${baseUrl}add-article`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newStockItemData),
-        });
-        const data = await response.json();
-        setStock((prev) => [...prev, data.data]);
-        setError({ isError: !!data.error, message: data.message });
-        setNewItem({ nom: "", id_fournisseurs: "", reference: "", codeBar: "", prix: 0, statutArticle: "En vente" });
-        setModalOpen(false);
+      const newStockItemData = {
+        id_article: "",
+        id_fournisseurs: newItem.id_fournisseurs,
+        nom: newItem.nom,
+        reference: newItem.reference,
+        codeBar: newItem.codeBar,
+        prix: newItem.prix,
+        statutArticle: newItem.statutArticle,
+      };
+      const response = await fetch(`${baseUrl}add-article`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newStockItemData),
+      });
+      const data = await response.json();
+      setStock((prev) => [...prev, data.data]);
+      setError({ isError: !!data.error, message: data.message });
+      setNewItem({ nom: "", id_fournisseurs: "", reference: "", codeBar: "", prix: 0, statutArticle: "En vente" });
+      setModalOpen(false);
     } catch (error) { console.error(error); }
   };
 
@@ -205,8 +205,8 @@ export default function BaseTableStock() {
   const showAddStockModal = (id_article: string) => {
     const art = stock.find(i => i.id_article === id_article);
     if (art) {
-        setNewItem({ ...art, updating: false });
-        setStockAdd({ id_article });
+      setNewItem({ ...art, updating: false });
+      setStockAdd({ id_article });
     }
     setModalStockOpen(true);
   };
@@ -221,21 +221,21 @@ export default function BaseTableStock() {
       {/* Barre d'outils supérieure */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex gap-3 items-center">
-            <input
-                type="text"
-                placeholder="Rechercher un produit..."
-                className="w-64 rounded-lg border border-gray-200 px-3 py-2 text-sm dark:bg-white/[0.03] dark:border-white/[0.05]"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-            />
-            
+          <input
+            type="text"
+            placeholder="Rechercher un produit..."
+            className="w-64 rounded-lg border border-gray-200 px-3 py-2 text-sm dark:bg-white/[0.03] dark:border-white/[0.05]"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+
         </div>
 
         <div className="flex gap-3">
           <PDFDownloadLink
-                document={<StockPDFDocument data={filteredStock} suppliers={suppliers} />}
-                fileName={`Stock_${new Date().toLocaleDateString()}.pdf`}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+            document={<StockPDFDocument data={filteredStock} suppliers={suppliers} />}
+            fileName={`Stock_${new Date().toLocaleDateString()}.pdf`}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
           >
             {({ loading }) =>
               loading ? (
@@ -323,8 +323,8 @@ export default function BaseTableStock() {
           </Table>
         </div>
       </div>
- {/* Modal ajouter produit */}
- {modalOpen && (
+      {/* Modal ajouter produit */}
+      {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg dark:bg-gray-900">
             <h3 className="mb-4 text-lg font-semibold">Ajouter un produit</h3>
@@ -374,7 +374,7 @@ export default function BaseTableStock() {
                 />
                 <datalist id="suppliers-list" className="w-full rounded-lg border px-3 py-2">
                   {suppliers.map((s) => (
-                    <option key={s.id_fournisseurs} value={s.nom_fournisseurs} />
+                    <option key={s.id_fournisseurs} value={s.nom_fournisseurs}>{s.nom_fournisseurs}</option>
                   ))}
                 </datalist>
               </div>
@@ -461,7 +461,7 @@ export default function BaseTableStock() {
           </div>
         </div>
       )}
-      
+
     </div>
   );
 }

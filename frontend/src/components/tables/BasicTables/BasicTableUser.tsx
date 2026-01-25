@@ -6,16 +6,16 @@ import {
     TableHeader,
     TableRow,
 } from "../../ui/table";
-import { 
-    PencilSquareIcon, 
-    MagnifyingGlassIcon, 
-    TrashIcon, 
-    PlusIcon, 
-    UserIcon 
+import {
+    PencilSquareIcon,
+    MagnifyingGlassIcon,
+    TrashIcon,
+    PlusIcon,
+    UserIcon
 } from "@heroicons/react/24/outline";
 import Alert from "../../ui/alert/Alert";
 import Badge from "../../ui/badge/Badge"; // Assurez-vous d'avoir ce composant ou utilisez un span stylisé
-import { baseUrl } from '../../functionGeneral';
+import { baseUrl, getApiMessage } from '../../functionGeneral';
 
 // --- Interfaces ---
 interface UsersItem {
@@ -49,7 +49,7 @@ export default function BasicTableUser() {
     const [roles, setRoles] = useState<roleI[]>([])
     const [search, setSearch] = useState("");
     const [modalOpen, setModalOpen] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState({ isError: false, message: "" });
     const [newUserItem, setNewUserItem] = useState<Partial<UsersEditItem>>({
         nom: "", login: "", email: "", telephone: "", numero_CNI: "",
         numero_permis: "", mot_de_passe: "", roleid: "", statutUser: "Actif",
@@ -68,24 +68,198 @@ export default function BasicTableUser() {
                 setUsers(dataUsers.data || []);
                 setRoles(dataRoles.data || []);
             } catch (err: any) {
-                setError("Erreur de chargement des données");
+                setError({ isError: true, message: "Erreur de chargement des données" });
             }
         }
         fetchData();
-    }, []);
+    }, [baseUrl]);
+
+    const showEditUser = (id_utilisateur: string) => {
+        const userToEdit = users.find((user) => user.id_utilisateur === id_utilisateur);
+        setNewUserItem({
+            nom: userToEdit?.nom,
+            email: userToEdit?.email,
+            telephone: userToEdit?.telephone,
+            numero_CNI: userToEdit?.numero_CNI,
+            numero_permis: userToEdit?.numero_permis,
+            login: userToEdit?.login,
+            mot_de_passe: userToEdit?.mot_de_passe,
+            roleid: userToEdit?.roleid,
+            statutUser: userToEdit?.statutUser,
+            createdAt: userToEdit?.createdAt,
+            modifyAt: userToEdit?.modifyAt,
+            updating: true
+        });
+
+        setModalOpen(true);
+    }
+
+    const showLogin = (roleid: string | undefined) => {
+        let filteredrole = roles.filter((role) => role.id_role === roleid && (role.libelle === 'Utilisateur-stock' || role.libelle === 'Utilisateur-admin' || role.libelle === 'Utilisateur-caisse'));
+        let filteredlivreur = roles.filter((role) => role.id_role === roleid && role.libelle === 'Livreur');
+        let filteredautre = roles.filter((role) => role.id_role === roleid && (role.libelle !== 'Livreur' && role.libelle !== 'Utilisateur-stock' && role.libelle !== 'Utilisateur-admin' && role.libelle !== 'Utilisateur-caisse'));
+
+        if (filteredrole.length > 0) {
+            return (
+                <>
+                    <input
+                        type="text"
+                        placeholder="login"
+                        className="w-full rounded-lg border px-3 py-2"
+                        value={newUserItem.login}
+                        onChange={(e) => setNewUserItem({ ...newUserItem, login: e.target.value })}
+                    />
+                    <input
+                        type="password"
+                        placeholder="Mot de passe"
+                        className="w-full rounded-lg border px-3 py-2"
+                        value={newUserItem.mot_de_passe}
+                        onChange={(e) => setNewUserItem({ ...newUserItem, mot_de_passe: e.target.value })}
+                    />
+                </>
+            );
+
+        }
+
+        if (filteredlivreur.length > 0) {
+            return (
+                <>
+                    <input
+                        type="text"
+                        placeholder="Mail"
+                        className="w-full rounded-lg border px-3 py-2"
+                        value={newUserItem.email}
+                        onChange={(e) => setNewUserItem({ ...newUserItem, email: e.target.value })}
+                    />
+                    <input
+                        type="text"
+                        placeholder="Telephone"
+                        className="w-full rounded-lg border px-3 py-2"
+                        value={newUserItem.telephone}
+                        onChange={(e) => setNewUserItem({ ...newUserItem, telephone: e.target.value })}
+                    />
+                    <input
+                        type="text"
+                        placeholder="Numero de CNI"
+                        className="w-full rounded-lg border px-3 py-2"
+                        value={newUserItem.numero_CNI}
+                        onChange={(e) => setNewUserItem({ ...newUserItem, numero_CNI: e.target.value })}
+                    />
+                    <input
+                        type="text"
+                        placeholder="Numero de permis de conduire"
+                        className="w-full rounded-lg border px-3 py-2"
+                        value={newUserItem.numero_permis}
+                        onChange={(e) => setNewUserItem({ ...newUserItem, numero_permis: e.target.value })}
+                    />
+                </>
+            );
+        }
+
+        if (filteredautre.length > 0) {
+            return (
+                <>
+                    <input
+                        type="text"
+                        placeholder="Mail"
+                        className="w-full rounded-lg border px-3 py-2"
+                        value={newUserItem.email}
+                        onChange={(e) => setNewUserItem({ ...newUserItem, email: e.target.value })}
+                    />
+                    <input
+                        type="text"
+                        placeholder="Telephone"
+                        className="w-full rounded-lg border px-3 py-2"
+                        value={newUserItem.telephone}
+                        onChange={(e) => setNewUserItem({ ...newUserItem, telephone: e.target.value })}
+                    />
+                </>
+            )
+        }
+        return null
+    }
 
     const handleAddUserItem = async (e: any) => {
         e.preventDefault();
-        // Logique d'ajout/modification ici (similaire à votre code précédent)
-        setModalOpen(false);
-    }
+        if (!newUserItem.nom || !newUserItem.roleid) return;
+        let newUser: any
 
-    const showEditUser = (id_utilisateur: string) => {
-        const userToEdit = users.find((u) => u.id_utilisateur === id_utilisateur);
-        if (userToEdit) {
-            setNewUserItem({ ...userToEdit, updating: true });
-            setModalOpen(true);
+        let filteredrole = roles.filter((role) => role.id_role === newUserItem.roleid);
+        try {
+            if (newUserItem.updating) {
+                console.log("updating...");
+                newUser = {
+                    nom: newUserItem.nom!,
+                    login: newUserItem.login!,
+                    roleid: newUserItem.roleid!,
+                    email: newUserItem.email!,
+                    telephone: newUserItem.telephone!,
+                    numero_CNI: newUserItem.numero_CNI!,
+                    numero_permis: newUserItem.numero_permis!,
+                    mot_de_passe: newUserItem.mot_de_passe!,
+                    statutUser: newUserItem.statutUser,
+                    createdAt: newUserItem.createdAt!,
+                    modifyAt: newUserItem.modifyAt!,
+                };
+            }
+            else {
+                console.log("registering...");
+                newUser = {
+                    nom: newUserItem.nom!,
+                    login: newUserItem.login!,
+                    roleid: newUserItem.roleid!,
+                    email: newUserItem.email!,
+                    telephone: newUserItem.telephone!,
+                    numero_CNI: newUserItem.numero_CNI!,
+                    numero_permis: newUserItem.numero_permis!,
+                    mot_de_passe: newUserItem.mot_de_passe!,
+                    statutUser: newUserItem.statutUser,
+                    createdAt: newUserItem.createdAt!,
+                    modifyAt: newUserItem.modifyAt!,
+                };
+                let createUser: any;
+                if (filteredrole[0].libelle === 'Utilisateur-stock' || filteredrole[0].libelle === 'Utilisateur-admin' || filteredrole[0].libelle === 'Utilisateur-caisse') {
+                    createUser = await fetch(`${baseUrl}register-user`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(newUser),
+                    });
+                }
+                else if (filteredrole[0].libelle === 'Client') {
+                    createUser = await fetch(`${baseUrl}resgiter-client`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(newUser),
+                    });
+                }
+                else if (filteredrole[0].libelle === 'Livreur') {
+                    createUser = await fetch(`${baseUrl}register-driver`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(newUser),
+                    });
+                }
+                setModalOpen(false);
+                let dataCreateUsers = await createUser.json()
+                if (dataCreateUsers.error) {
+                    setError({ isError: true, message: dataCreateUsers.message });
+                } else {
+                    setError({ isError: false, message: dataCreateUsers.message });
+                }
+
+                // window.location.reload()
+            }
+        } catch (error) {
+            alert('Error registering/Updateting role: role may already exist.');
+            console.error('Error registering module:', error);
         }
+
     }
 
     const deleteUser = (id_utilisateur: string) => {
@@ -97,8 +271,8 @@ export default function BasicTableUser() {
     };
 
     // Filtrage simple pour la démo
-    const filteredUsers = users.filter(user => 
-        user.nom.toLowerCase().includes(search.toLowerCase()) || 
+    const filteredUsers = users.filter(user =>
+        user.nom.toLowerCase().includes(search.toLowerCase()) ||
         user.login.toLowerCase().includes(search.toLowerCase())
     );
 
@@ -118,7 +292,7 @@ export default function BasicTableUser() {
                         onChange={(e) => setSearch(e.target.value)}
                     />
                 </div>
-                
+
                 <button
                     onClick={() => {
                         setNewUserItem({ nom: "", updating: false, statutUser: "Actif" });
@@ -131,9 +305,7 @@ export default function BasicTableUser() {
                 </button>
             </div>
 
-            {error && (
-                <Alert variant="error" title="Erreur" message={error} showLink={false} />
-            )}
+            {getApiMessage(error.isError, error.message)}
 
             {/* Tableau Style TailAdmin */}
             <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/[0.05] dark:bg-white/[0.03]">
@@ -179,14 +351,14 @@ export default function BasicTableUser() {
                                             className="inline-flex items-center gap-1.5 text-brand-500 hover:text-brand-600 font-medium text-sm transition-colors"
                                         >
                                             <PencilSquareIcon className="size-5" />
-                                            
+
                                         </button>
                                         <button
                                             onClick={() => deleteUser(item.id_utilisateur)}
                                             title="Supprimer"
                                             className="text-gray-500 hover:text-red-600 dark:hover:text-red-400"
                                         >
-                                            
+
                                             <TrashIcon className="size-5" />
                                         </button>
                                     </TableCell>
@@ -204,7 +376,7 @@ export default function BasicTableUser() {
                         <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-6">
                             {newUserItem.updating ? "Modifier l'utilisateur" : "Nouvel utilisateur"}
                         </h3>
-                        
+
                         <form onSubmit={handleAddUserItem} className="space-y-4">
                             <div>
                                 <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Nom et prénoms</label>
@@ -216,6 +388,7 @@ export default function BasicTableUser() {
                                     required
                                 />
                             </div>
+                            {showLogin(newUserItem.roleid)}
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
